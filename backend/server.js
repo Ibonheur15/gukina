@@ -31,6 +31,43 @@ app.get('/', (req, res) => {
   res.send('Welcome to Gukina API');
 });
 
+// Database connection test endpoint
+app.get('/api/db-status', async (req, res) => {
+  try {
+    // Check if connected
+    if (mongoose.connection.readyState === 1) {
+      // Try to get a count from a collection
+      const countriesCount = await mongoose.connection.db.collection('countries').countDocuments();
+      
+      res.json({
+        status: 'connected',
+        readyState: mongoose.connection.readyState,
+        dbName: mongoose.connection.name,
+        collections: {
+          countries: countriesCount
+        }
+      });
+    } else {
+      res.status(500).json({
+        status: 'disconnected',
+        readyState: mongoose.connection.readyState,
+        states: {
+          0: 'disconnected',
+          1: 'connected',
+          2: 'connecting',
+          3: 'disconnecting'
+        }
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      message: error.message,
+      stack: process.env.NODE_ENV === 'production' ? null : error.stack
+    });
+  }
+});
+
 // Connect to MongoDB
 mongoose
   .connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/gukina', {
@@ -39,6 +76,19 @@ mongoose
   })
   .then(() => console.log('MongoDB connected'))
   .catch((err) => console.log('MongoDB connection error:', err));
+
+// Add connection event listeners
+mongoose.connection.on('connected', () => {
+  console.log('Mongoose connected to DB');
+});
+
+mongoose.connection.on('error', (err) => {
+  console.log('Mongoose connection error:', err);
+});
+
+mongoose.connection.on('disconnected', () => {
+  console.log('Mongoose disconnected');
+});
 
 // Start server
 app.listen(PORT, () => {

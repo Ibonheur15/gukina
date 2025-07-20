@@ -15,26 +15,44 @@ const HomePage = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
+        setError(null);
         
         // Fetch live matches
-        const liveRes = await matchService.getLive();
-        setLiveMatches(liveRes.data);
+        try {
+          const liveRes = await matchService.getLive();
+          setLiveMatches(liveRes.data || []);
+        } catch (err) {
+          console.error('Error fetching live matches:', err);
+          setLiveMatches([]);
+          // Don't set error yet, try to load other data
+        }
         
         // Fetch today's matches
-        const today = new Date();
-        const startOfDay = new Date(today.setHours(0, 0, 0, 0)).toISOString();
-        const endOfDay = new Date(today.setHours(23, 59, 59, 999)).toISOString();
-        
-        const todayRes = await matchService.getByDateRange(startOfDay, endOfDay);
-        setTodayMatches(todayRes.data);
+        try {
+          const today = new Date();
+          const startOfDay = new Date(today.setHours(0, 0, 0, 0)).toISOString();
+          const endOfDay = new Date(today.setHours(23, 59, 59, 999)).toISOString();
+          
+          const todayRes = await matchService.getByDateRange(startOfDay, endOfDay);
+          setTodayMatches(todayRes.data || []);
+        } catch (err) {
+          console.error('Error fetching today matches:', err);
+          setTodayMatches([]);
+        }
         
         // Fetch leagues
-        const leaguesRes = await leagueService.getAll();
-        setLeagues(leaguesRes.data);
+        try {
+          const leaguesRes = await leagueService.getAll();
+          setLeagues(leaguesRes.data || []);
+        } catch (err) {
+          console.error('Error fetching leagues:', err);
+          setLeagues([]);
+        }
         
         setLoading(false);
       } catch (err) {
-        setError('Failed to load matches');
+        console.error('General error:', err);
+        setError('Failed to load data. Please try again later.');
         setLoading(false);
       }
     };
@@ -44,9 +62,15 @@ const HomePage = () => {
 
   // Group matches by league
   const groupMatchesByLeague = (matches) => {
+    if (!matches || !Array.isArray(matches) || matches.length === 0) {
+      return [];
+    }
+    
     const grouped = {};
     
     matches.forEach(match => {
+      if (!match.league || !match.league._id) return;
+      
       const leagueId = match.league._id;
       const leagueName = match.league.name;
       
@@ -84,6 +108,12 @@ const HomePage = () => {
     return (
       <div className="bg-red-500 bg-opacity-10 border border-red-500 text-red-500 p-4 rounded-md">
         {error}
+        <button 
+          className="block mt-4 px-4 py-2 bg-red-500 text-white rounded-md mx-auto"
+          onClick={() => window.location.reload()}
+        >
+          Retry
+        </button>
       </div>
     );
   }
@@ -124,6 +154,14 @@ const HomePage = () => {
           </svg>
         </button>
       </div>
+
+      {/* API Status Message */}
+      {(!liveMatches.length && !todayMatches.length) && (
+        <div className="bg-yellow-500 bg-opacity-10 border border-yellow-500 text-yellow-500 p-4 rounded-md mb-6">
+          <p>The API may be experiencing issues or there are no matches available.</p>
+          <p className="mt-2">This is a demo application - sample data will be displayed soon.</p>
+        </div>
+      )}
 
       {/* Live Matches Section */}
       {liveMatches.length > 0 && (

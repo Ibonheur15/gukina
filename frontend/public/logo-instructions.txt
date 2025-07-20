@@ -1,0 +1,12 @@
+To fix the logo errors:
+
+1. Create these image files:
+   - logo192.png (192x192 pixels)
+   - logo512.png (512x512 pixels)
+   - favicon.ico (16x16 or 32x32 pixels)
+
+2. Place them in this directory (frontend/public/)
+
+3. Use a simple green logo with the letter "G" to match the Gukina theme
+
+You can create these using any image editor or find free icon generators online.
