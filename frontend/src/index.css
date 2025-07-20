@@ -1,0 +1,61 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+body {
+  @apply bg-dark-100 text-white;
+  margin: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+/* Custom classes */
+.match-card {
+  @apply bg-dark-200 rounded-lg p-4 mb-3 hover:bg-dark-300 transition-colors;
+}
+
+.live-badge {
+  @apply bg-primary text-white text-xs font-semibold px-2 py-0.5 rounded-full;
+}
+
+.nav-link {
+  @apply px-4 py-2 hover:text-primary transition-colors;
+}
+
+.nav-link.active {
+  @apply text-primary font-medium;
+}
+
+.btn {
+  @apply px-4 py-2 rounded-md font-medium transition-colors;
+}
+
+.btn-primary {
+  @apply bg-primary text-white hover:bg-opacity-90;
+}
+
+.btn-secondary {
+  @apply bg-dark-300 text-white hover:bg-dark-400;
+}
+
+.form-input {
+  @apply bg-dark-300 border border-dark-400 rounded-md px-3 py-2 w-full focus:outline-none focus:ring-1 focus:ring-primary;
+}
+
+.form-label {
+  @apply block text-sm font-medium mb-1;
+}
+
+.form-group {
+  @apply mb-4;
+}
