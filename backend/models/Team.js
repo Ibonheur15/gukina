@@ -21,10 +21,25 @@ const teamSchema = new mongoose.Schema(
       ref: 'Country',
       required: true
     },
-    leagues: [{
+    league: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'League'
-    }],
+    },
+    popularity: {
+      type: Number,
+      default: 0
+    },
+    city: {
+      type: String,
+      trim: true
+    },
+    stadium: {
+      type: String,
+      trim: true
+    },
+    foundedYear: {
+      type: Number
+    },
     active: {
       type: Boolean,
       default: true

@@ -10,6 +10,10 @@ const leagueRoutes = require('./routes/leagueRoutes');
 const teamRoutes = require('./routes/teamRoutes');
 const matchRoutes = require('./routes/matchRoutes');
 const authRoutes = require('./routes/authRoutes');
+const newsRoutes = require('./routes/newsRoutes');
+const leagueStandingRoutes = require('./routes/leagueStandingRoutes');
+const seasonRoutes = require('./routes/seasonRoutes');
+const fixRoutes = require('./routes/fixRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -25,6 +29,10 @@ app.use('/api/leagues', leagueRoutes);
 app.use('/api/teams', teamRoutes);
 app.use('/api/matches', matchRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/news', newsRoutes);
+app.use('/api/standings', leagueStandingRoutes);
+app.use('/api/seasons', seasonRoutes);
+app.use('/api/fix', fixRoutes);
 
 // Root route
 app.get('/', (req, res) => {

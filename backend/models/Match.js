@@ -54,6 +54,10 @@ const matchSchema = new mongoose.Schema(
       enum: ['not_started', 'live', 'halftime', 'ended', 'postponed', 'canceled'],
       default: 'not_started'
     },
+    currentMinute: {
+      type: Number,
+      default: 0
+    },
     homeScore: {
       type: Number,
       default: 0

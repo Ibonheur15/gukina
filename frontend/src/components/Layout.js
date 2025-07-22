@@ -1,24 +1,24 @@
 import React, { useState } from 'react';
 import { Outlet, NavLink, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import Sidebar from './Sidebar';
+import SidebarToggle from './SidebarToggle';
 
 const Layout = () => {
   const { isAuthenticated, isAdmin, logout } = useAuth();
   const [activeSport, setActiveSport] = useState('football');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const sports = [
     { id: 'football', name: 'Football' },
-    { id: 'basketball', name: 'Basketball' },
-    { id: 'tennis', name: 'Tennis' },
-    { id: 'cricket', name: 'Cricket' },
-    { id: 'hockey', name: 'Hockey' },
+    { id: 'basketball', name: 'Basketball', comingSoon: true },
   ];
 
   return (
     <div className="min-h-screen bg-dark-100 text-white">
-      {/* Top Navigation */}
-      <header className="bg-dark-200 shadow-md">
+      {/* Top Navigation - Fixed */}
+      <header className="bg-dark-200 shadow-md fixed top-0 left-0 right-0 z-50">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
@@ -33,15 +33,30 @@ const Layout = () => {
               }>
                 Scores
               </NavLink>
-              <NavLink to="/fixtures" className={({ isActive }) => 
+              <NavLink to="/news" className={({ isActive }) => 
                 isActive ? 'nav-link active' : 'nav-link'
               }>
-                Fixtures
+                News
               </NavLink>
-              <NavLink to="/favorites" className={({ isActive }) => 
+              <NavLink to="/matches" className={({ isActive }) => 
                 isActive ? 'nav-link active' : 'nav-link'
               }>
-                Favorites
+                Matches
+              </NavLink>
+              <NavLink to="/competitions" className={({ isActive }) => 
+                isActive ? 'nav-link active' : 'nav-link'
+              }>
+                Competitions
+              </NavLink>
+              <NavLink to="/teams" className={({ isActive }) => 
+                isActive ? 'nav-link active' : 'nav-link'
+              }>
+                Teams
+              </NavLink>
+              <NavLink to="/calendar" className={({ isActive }) => 
+                isActive ? 'nav-link active' : 'nav-link'
+              }>
+                Calendar
               </NavLink>
             </nav>
 
@@ -88,11 +103,20 @@ const Layout = () => {
               <NavLink to="/" className="block py-2" onClick={() => setMobileMenuOpen(false)}>
                 Scores
               </NavLink>
-              <NavLink to="/fixtures" className="block py-2" onClick={() => setMobileMenuOpen(false)}>
-                Fixtures
+              <NavLink to="/news" className="block py-2" onClick={() => setMobileMenuOpen(false)}>
+                News
               </NavLink>
-              <NavLink to="/favorites" className="block py-2" onClick={() => setMobileMenuOpen(false)}>
-                Favorites
+              <NavLink to="/matches" className="block py-2" onClick={() => setMobileMenuOpen(false)}>
+                Matches
+              </NavLink>
+              <NavLink to="/competitions" className="block py-2" onClick={() => setMobileMenuOpen(false)}>
+                Competitions
+              </NavLink>
+              <NavLink to="/teams" className="block py-2" onClick={() => setMobileMenuOpen(false)}>
+                Teams
+              </NavLink>
+              <NavLink to="/calendar" className="block py-2" onClick={() => setMobileMenuOpen(false)}>
+                Calendar
               </NavLink>
               {isAuthenticated ? (
                 <>
@@ -127,6 +151,11 @@ const Layout = () => {
                   onClick={() => setActiveSport(sport.id)}
                 >
                   {sport.name}
+                  {sport.comingSoon && (
+                    <span className="ml-1 px-1 py-0.5 bg-yellow-900 bg-opacity-30 text-yellow-500 text-xs rounded">
+                      Soon
+                    </span>
+                  )}
                 </button>
               ))}
             </div>
@@ -134,48 +163,41 @@ const Layout = () => {
         </div>
       </header>
 
+      {/* Spacer to prevent content from being hidden under fixed header */}
+      <div className="h-32"></div>
+
       {/* Main Content */}
       <main className="container mx-auto px-4 py-6">
-        <div className="flex flex-col md:flex-row">
-          {/* Sidebar */}
-          <aside className="w-full md:w-64 mb-6 md:mb-0 md:mr-6">
-            <div className="bg-dark-200 rounded-lg p-4 mb-4">
-              <h3 className="font-semibold mb-2">Regions</h3>
-              <ul className="space-y-1">
-                <li><a href="#" className="text-sm hover:text-primary">Rwanda</a></li>
-                <li><a href="#" className="text-sm hover:text-primary">Kenya</a></li>
-                <li><a href="#" className="text-sm hover:text-primary">Nigeria</a></li>
-                <li><a href="#" className="text-sm hover:text-primary">CAF</a></li>
-              </ul>
-            </div>
-            
-            <div className="bg-dark-200 rounded-lg p-4 mb-4">
-              <h3 className="font-semibold mb-2">Competitions</h3>
-              <ul className="space-y-1">
-                <li><a href="#" className="text-sm hover:text-primary">Rwanda Premier League</a></li>
-                <li><a href="#" className="text-sm hover:text-primary">Kenya Premier League</a></li>
-                <li><a href="#" className="text-sm hover:text-primary">Nigeria Professional League</a></li>
-                <li><a href="#" className="text-sm hover:text-primary">CAF Champions League</a></li>
-              </ul>
-            </div>
-            
-            <div className="bg-dark-200 rounded-lg p-4">
-              <h3 className="font-semibold mb-2">Teams</h3>
-              <ul className="space-y-1">
-                <li><a href="#" className="text-sm hover:text-primary">APR FC</a></li>
-                <li><a href="#" className="text-sm hover:text-primary">Gor Mahia</a></li>
-                <li><a href="#" className="text-sm hover:text-primary">Enyimba FC</a></li>
-                <li><a href="#" className="text-sm hover:text-primary">Al Ahly</a></li>
-              </ul>
-            </div>
-          </aside>
-
+        <div className="flex flex-col lg:flex-row">
+          {/* Sidebar for large screens */}
+          <div className="hidden lg:block lg:w-64 lg:mr-6">
+            <Sidebar isOpen={true} onClose={() => {}} />
+          </div>
+          
           {/* Content */}
           <div className="flex-1">
             <Outlet />
           </div>
         </div>
       </main>
+      
+      {/* Sidebar Toggle Button - Only on mobile */}
+      <div className="lg:hidden">
+        <SidebarToggle onClick={() => setSidebarOpen(true)} />
+      </div>
+      
+      {/* Mobile Sidebar */}
+      <div className="lg:hidden">
+        <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+        
+        {/* Overlay when sidebar is open */}
+        {sidebarOpen && (
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50 z-30"
+            onClick={() => setSidebarOpen(false)}
+          ></div>
+        )}
+      </div>
 
       {/* Footer */}
       <footer className="bg-dark-200 py-6">

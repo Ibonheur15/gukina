@@ -5,9 +5,10 @@ const { protect, restrictTo } = require('../middleware/auth');
 
 // Public routes
 router.get('/', teamController.getAllTeams);
-router.get('/:id', teamController.getTeamById);
+router.get('/popular', teamController.getPopularTeams);
 router.get('/country/:countryId', teamController.getTeamsByCountry);
 router.get('/league/:leagueId', teamController.getTeamsByLeague);
+router.get('/:id', teamController.getTeamById);
 
 // Protected routes (admin/editor only)
 router.post('/', protect, restrictTo('admin', 'editor'), teamController.createTeam);

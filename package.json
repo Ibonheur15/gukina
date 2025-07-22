@@ -1,5 +1,27 @@
 {
+  "name": "gukina",
+  "version": "1.0.0",
+  "description": "Gukina - African Sports Platform",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "start": "concurrently \"npm run start:backend\" \"npm run start:frontend\"",
+    "start:backend": "cd backend && npm run dev",
+    "start:frontend": "cd frontend && npm start",
+    "build": "npm run build:frontend && npm run build:backend",
+    "build:frontend": "cd frontend && npm run build",
+    "build:backend": "cd backend && npm run build",
+    "install:all": "npm install && npm run install:frontend && npm run install:backend",
+    "install:frontend": "cd frontend && npm install",
+    "install:backend": "cd backend && npm install"
+  },
   "dependencies": {
     "mongodb": "^6.17.0"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
   }
 }

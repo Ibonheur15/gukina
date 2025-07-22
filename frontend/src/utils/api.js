@@ -50,11 +50,26 @@ export const countryService = {
 
 export const leagueService = {
   getAll: () => api.get('/leagues'),
-  getById: (id) => api.get(`/leagues/${id}`),
+  getById: (id, season) => {
+    const query = season ? `?season=${season}` : '';
+    return api.get(`/leagues/${id}${query}`);
+  },
   getByCountry: (countryId) => api.get(`/leagues/country/${countryId}`),
+  getTopLeagues: (limit = 5) => api.get(`/leagues/top?limit=${limit}`),
   create: (data) => api.post('/leagues', data),
   update: (id, data) => api.put(`/leagues/${id}`, data),
   delete: (id) => api.delete(`/leagues/${id}`),
+};
+
+export const standingService = {
+  getByLeague: (leagueId, season) => {
+    const query = season ? `?season=${season}` : '';
+    return api.get(`/standings/league/${leagueId}${query}`);
+  },
+  updateTeamStanding: (leagueId, teamId, data) => 
+    api.put(`/standings/league/${leagueId}/team/${teamId}`, data),
+  updateFromMatch: (matchId, data) => 
+    api.post(`/standings/match/${matchId}`, data),
 };
 
 export const teamService = {
@@ -62,6 +77,7 @@ export const teamService = {
   getById: (id) => api.get(`/teams/${id}`),
   getByCountry: (countryId) => api.get(`/teams/country/${countryId}`),
   getByLeague: (leagueId) => api.get(`/teams/league/${leagueId}`),
+  getPopular: (limit = 12) => api.get(`/teams/popular?limit=${limit}`),
   create: (data) => api.post('/teams', data),
   update: (id, data) => api.put(`/teams/${id}`, data),
   delete: (id) => api.delete(`/teams/${id}`),
@@ -73,6 +89,7 @@ export const matchService = {
   getLive: () => api.get('/matches/live'),
   getByDateRange: (startDate, endDate) => 
     api.get(`/matches/date?startDate=${startDate}&endDate=${endDate}`),
+  getByDay: (day) => api.get(`/matches/date?day=${day}`),
   getByLeague: (leagueId) => api.get(`/matches/league/${leagueId}`),
   getByTeam: (teamId) => api.get(`/matches/team/${teamId}`),
   create: (data) => api.post('/matches', data),
@@ -80,6 +97,14 @@ export const matchService = {
   addEvent: (id, data) => api.post(`/matches/${id}/events`, data),
   updateStatus: (id, status) => api.put(`/matches/${id}/status`, { status }),
   delete: (id) => api.delete(`/matches/${id}`),
+};
+
+export const seasonService = {
+  getByLeague: (leagueId) => api.get(`/seasons/league/${leagueId}`),
+};
+
+export const fixService = {
+  fixLeagueData: (leagueId) => api.get(`/fix/league/${leagueId}`),
 };
 
 export const authService = {

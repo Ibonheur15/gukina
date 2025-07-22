@@ -3,10 +3,22 @@ import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 
 const MatchCard = ({ match }) => {
+  // Check if match has required data
+  if (!match || !match.homeTeam || !match.awayTeam) {
+    return (
+      <div className="match-card block bg-dark-300 p-2 rounded">
+        <div className="text-center text-gray-400">Match data unavailable</div>
+      </div>
+    );
+  }
   const getStatusDisplay = () => {
     switch (match.status) {
       case 'live':
-        return <span className="live-badge">LIVE</span>;
+        return (
+          <span className="live-badge">
+            {match.currentMinute ? `${match.currentMinute}'` : 'LIVE'}
+          </span>
+        );
       case 'halftime':
         return <span className="live-badge">HT</span>;
       case 'ended':
@@ -36,7 +48,7 @@ const MatchCard = ({ match }) => {
                 {match.homeTeam.logo ? (
                   <img src={match.homeTeam.logo} alt={match.homeTeam.name} className="w-full h-full object-cover" />
                 ) : (
-                  <span className="text-xs">{match.homeTeam.shortName.substring(0, 2)}</span>
+                  <span className="text-xs">{match.homeTeam.shortName ? match.homeTeam.shortName.substring(0, 2) : match.homeTeam.name.substring(0, 2)}</span>
                 )}
               </div>
               <span className="font-medium">{match.homeTeam.name}</span>
@@ -53,7 +65,7 @@ const MatchCard = ({ match }) => {
                 {match.awayTeam.logo ? (
                   <img src={match.awayTeam.logo} alt={match.awayTeam.name} className="w-full h-full object-cover" />
                 ) : (
-                  <span className="text-xs">{match.awayTeam.shortName.substring(0, 2)}</span>
+                  <span className="text-xs">{match.awayTeam.shortName ? match.awayTeam.shortName.substring(0, 2) : match.awayTeam.name.substring(0, 2)}</span>
                 )}
               </div>
               <span className="font-medium">{match.awayTeam.name}</span>

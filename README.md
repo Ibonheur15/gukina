@@ -77,9 +77,11 @@ gukina/
 
 ### Prerequisites
 - Node.js (v14+)
-- MongoDB
+- MongoDB Atlas account or local MongoDB instance
+- GitHub account
+- Vercel account
 
-### Installation
+### Local Development Setup
 
 1. Clone the repository
 ```
@@ -87,14 +89,26 @@ git clone https://github.com/yourusername/gukina.git
 cd gukina
 ```
 
-2. Install backend dependencies
+2. Install all dependencies at once
 ```
+npm run install:all
+```
+
+Or install dependencies separately:
+
+```
+# Backend dependencies
 cd backend
+npm install
+
+# Frontend dependencies
+cd ../frontend
 npm install
 ```
 
 3. Set up environment variables
-Create a `.env` file in the backend directory with the following:
+
+Create a `.env` file in the backend directory:
 ```
 PORT=5000
 MONGODB_URI=mongodb://localhost:27017/gukina
@@ -102,13 +116,19 @@ JWT_SECRET=your_jwt_secret
 ADMIN_SECRET_KEY=your_admin_secret
 ```
 
-4. Install frontend dependencies
+Create a `.env.development` file in the frontend directory:
 ```
-cd ../frontend
-npm install
+REACT_APP_API_URL=http://localhost:5000/api
 ```
 
-5. Start the development servers
+4. Start the development servers
+
+From the root directory:
+```
+npm start
+```
+
+Or start servers separately:
 
 Backend:
 ```
@@ -122,7 +142,7 @@ cd frontend
 npm start
 ```
 
-6. Create an admin user
+5. Create an admin user
 Send a POST request to `/api/auth/admin` with:
 ```json
 {
@@ -132,6 +152,56 @@ Send a POST request to `/api/auth/admin` with:
   "secretKey": "your_admin_secret"
 }
 ```
+
+## Deployment
+
+### Backend Deployment (Vercel)
+
+1. Push your code to GitHub
+
+2. Create a new project on Vercel and connect to your GitHub repository
+
+3. Configure the following settings:
+   - Framework Preset: Other
+   - Root Directory: backend
+   - Build Command: npm run build
+   - Output Directory: ./
+   - Install Command: npm install
+
+4. Add the following environment variables:
+   - MONGODB_URI: Your MongoDB Atlas connection string
+   - JWT_SECRET: Your JWT secret key
+   - ADMIN_SECRET_KEY: Your admin secret key
+
+5. Deploy the project
+
+### Frontend Deployment (Vercel)
+
+1. Create another new project on Vercel for the frontend
+
+2. Configure the following settings:
+   - Framework Preset: Create React App
+   - Root Directory: frontend
+   - Build Command: npm run build
+   - Output Directory: build
+   - Install Command: npm install
+
+3. Add the following environment variable:
+   - REACT_APP_API_URL: Your deployed backend URL + /api (e.g., https://gukina-api.vercel.app/api)
+
+4. Deploy the project
+
+### MongoDB Atlas Setup
+
+1. Create a MongoDB Atlas account if you don't have one
+
+2. Create a new cluster
+
+3. Create a database user with read/write permissions
+
+4. Add your IP address to the IP Access List (or allow access from anywhere for development)
+
+5. Get your connection string and replace `<username>`, `<password>`, and `<dbname>` with your actual values
 
 ## License
 This project is licensed under the MIT License.

@@ -57,4 +57,9 @@ userSchema.methods.comparePassword = async function(candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
 };
 
+// Virtual property to check if user is admin
+userSchema.virtual('isAdmin').get(function() {
+  return this.role === 'admin';
+});
+
 module.exports = mongoose.model('User', userSchema);

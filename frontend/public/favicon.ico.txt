@@ -1,0 +1,3 @@
+Please replace this text file with an actual ICO file named favicon.ico.
+
+You can create a simple favicon with any icon editor or download a placeholder.

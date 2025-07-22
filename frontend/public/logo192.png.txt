@@ -1,0 +1,4 @@
+Please replace this text file with an actual PNG image file named logo192.png.
+
+You can create a simple 192x192 pixel image with any image editor or download a placeholder from:
+https://via.placeholder.com/192

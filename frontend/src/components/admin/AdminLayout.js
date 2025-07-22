@@ -89,6 +89,22 @@ const AdminLayout = () => {
               >
                 Matches
               </NavLink>
+              <NavLink 
+                to="/admin/events" 
+                className={({ isActive }) => 
+                  `block px-4 py-2 rounded-md ${isActive ? 'bg-primary text-white' : 'hover:bg-dark-300'}`
+                }
+              >
+                Events
+              </NavLink>
+              <NavLink 
+                to="/admin/news" 
+                className={({ isActive }) => 
+                  `block px-4 py-2 rounded-md ${isActive ? 'bg-primary text-white' : 'hover:bg-dark-300'}`
+                }
+              >
+                News
+              </NavLink>
             </nav>
           </div>
         </aside>
