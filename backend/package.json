@@ -8,6 +8,8 @@
     "dev": "nodemon server.js",
     "build": "echo 'Backend build complete'",
     "test": "echo \"Error: no test specified\" && exit 1",
+    "init-db": "node init-db.js",
+    "test-db": "node test-db-connection.js",
     "seed-standings": "node seed-standings.js",
     "seed-leagues": "node seed-leagues.js",
     "seed-matches": "node seed-matches.js",
