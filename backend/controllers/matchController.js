@@ -189,12 +189,29 @@ exports.getMatchById = async (req, res) => {
 // Create new match
 exports.createMatch = async (req, res) => {
   try {
+    // Check if home team and away team are the same
+    if (req.body.homeTeam === req.body.awayTeam) {
+      return res.status(400).json({ message: 'Home team and away team cannot be the same' });
+    }
+    
     const newMatch = new Match(req.body);
     const savedMatch = await newMatch.save();
     const populatedMatch = await Match.findById(savedMatch._id)
       .populate('homeTeam', 'name shortName logo')
       .populate('awayTeam', 'name shortName logo')
       .populate('league', 'name');
+    
+    // If match is created with ended status, update standings
+    if (populatedMatch.status === 'ended') {
+      // Import standings service
+      const standingsService = require('../services/standingsService');
+      
+      // Update standings based on match result
+      const standingsResult = await standingsService.updateStandingsFromMatch(populatedMatch);
+      
+      console.log('Standings updated for new match:', standingsResult.success ? 'Success' : 'Failed');
+    }
+    
     res.status(201).json(populatedMatch);
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -204,6 +221,28 @@ exports.createMatch = async (req, res) => {
 // Update match
 exports.updateMatch = async (req, res) => {
   try {
+    // Check if home team and away team are the same
+    if (req.body.homeTeam && req.body.awayTeam && req.body.homeTeam === req.body.awayTeam) {
+      return res.status(400).json({ message: 'Home team and away team cannot be the same' });
+    }
+    
+    // Get the current match to check previous status
+    const match = await Match.findById(req.params.id);
+    if (!match) {
+      return res.status(404).json({ message: 'Match not found' });
+    }
+    
+    // If only one team is being updated, check against the existing other team
+    if (req.body.homeTeam && !req.body.awayTeam) {
+      if (req.body.homeTeam === match.awayTeam.toString()) {
+        return res.status(400).json({ message: 'Home team and away team cannot be the same' });
+      }
+    } else if (!req.body.homeTeam && req.body.awayTeam) {
+      if (req.body.awayTeam === match.homeTeam.toString()) {
+        return res.status(400).json({ message: 'Home team and away team cannot be the same' });
+      }
+    }
+    
     const updatedMatch = await Match.findByIdAndUpdate(
       req.params.id,
       req.body,
@@ -213,11 +252,20 @@ exports.updateMatch = async (req, res) => {
       .populate('awayTeam', 'name shortName logo')
       .populate('league', 'name');
     
-    if (!updatedMatch) {
-      return res.status(404).json({ message: 'Match not found' });
+    // If match is now ended but wasn't before, update standings
+    if (updatedMatch.status === 'ended' && match.status !== 'ended') {
+      // Import standings service
+      const standingsService = require('../services/standingsService');
+      
+      // Update standings based on match result
+      const standingsResult = await standingsService.updateStandingsFromMatch(updatedMatch);
+      
+      console.log('Standings updated for updated match:', standingsResult.success ? 'Success' : 'Failed');
     }
+    
     res.status(200).json(updatedMatch);
   } catch (error) {
+    console.error('Error updating match:', error);
     res.status(400).json({ message: error.message });
   }
 };
@@ -386,14 +434,19 @@ exports.updateMatchStatus = async (req, res) => {
       return res.status(400).json({ message: 'Invalid match status' });
     }
     
+    // Get the current match to check previous status
+    const match = await Match.findById(req.params.id);
+    if (!match) {
+      return res.status(404).json({ message: 'Match not found' });
+    }
+    
     // Reset currentMinute to 0 when starting or to 45 when second half starts
     let updateData = { status };
     if (status === 'live') {
       // If coming from not_started, set to 1, if coming from halftime, set to 46
-      const match = await Match.findById(req.params.id);
-      if (match && match.status === 'not_started') {
+      if (match.status === 'not_started') {
         updateData.currentMinute = 1;
-      } else if (match && match.status === 'halftime') {
+      } else if (match.status === 'halftime') {
         updateData.currentMinute = 46;
       }
     } else if (status === 'halftime') {
@@ -411,12 +464,20 @@ exports.updateMatchStatus = async (req, res) => {
       .populate('awayTeam', 'name shortName logo')
       .populate('league', 'name');
     
-    if (!updatedMatch) {
-      return res.status(404).json({ message: 'Match not found' });
+    // If match is now ended, update standings
+    if (status === 'ended' && match.status !== 'ended') {
+      // Import standings service
+      const standingsService = require('../services/standingsService');
+      
+      // Update standings based on match result
+      const standingsResult = await standingsService.updateStandingsFromMatch(updatedMatch);
+      
+      console.log('Standings updated:', standingsResult.success ? 'Success' : 'Failed');
     }
     
     res.status(200).json(updatedMatch);
   } catch (error) {
+    console.error('Error updating match status:', error);
     res.status(400).json({ message: error.message });
   }
 };

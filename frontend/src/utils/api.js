@@ -136,12 +136,12 @@ export const leagueService = {
 export const standingService = {
   getByLeague: (leagueId, season) => {
     const query = season ? `?season=${season}` : '';
-    return api.get(`/standings/league/${leagueId}${query}`);
+    return api.get(`/league-standings/league/${leagueId}${query}`);
   },
   updateTeamStanding: (leagueId, teamId, data) => 
-    api.put(`/standings/league/${leagueId}/team/${teamId}`, data),
+    api.put(`/league-standings/league/${leagueId}/team/${teamId}`, data),
   updateFromMatch: (matchId, data) => 
-    api.post(`/standings/match/${matchId}`, data),
+    api.post(`/league-standings/match/${matchId}`, data),
 };
 
 export const teamService = {
@@ -184,6 +184,15 @@ export const authService = {
   register: (userData) => api.post('/auth/register', userData),
   getCurrentUser: () => api.get('/auth/me'),
   createAdmin: (userData) => api.post('/auth/admin', userData),
+};
+
+export const newsService = {
+  getAll: () => api.get('/news'),
+  getById: (id) => api.get(`/news/${id}`),
+  getLatest: (limit = 3) => api.get(`/news/latest?limit=${limit}`),
+  create: (data) => api.post('/news', data),
+  update: (id, data) => api.put(`/news/${id}`, data),
+  delete: (id) => api.delete(`/news/${id}`),
 };
 
 // Function to clear cache (useful after POST/PUT/DELETE operations)

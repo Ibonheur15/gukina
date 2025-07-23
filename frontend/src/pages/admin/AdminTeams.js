@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
+import ConfirmationModal from '../../components/ConfirmationModal';
+import useConfirmation from '../../hooks/useConfirmation';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
@@ -11,6 +13,7 @@ const AdminTeams = () => {
   const [leagues, setLeagues] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { confirm, modalProps } = useConfirmation();
   const [formData, setFormData] = useState({
     name: '',
     shortName: '',
@@ -107,11 +110,19 @@ const AdminTeams = () => {
   };
 
   const handleEdit = (team) => {
+    // Handle both single league and leagues array
+    let leagueIds = [];
+    if (team.leagues && Array.isArray(team.leagues)) {
+      leagueIds = team.leagues.map(league => league._id);
+    } else if (team.league && team.league._id) {
+      leagueIds = [team.league._id];
+    }
+    
     setFormData({
       name: team.name,
       shortName: team.shortName,
-      country: team.country._id,
-      leagues: team.leagues.map(league => league._id),
+      country: team.country?._id || '',
+      leagues: leagueIds,
       logo: team.logo || '',
       city: team.city || '',
       stadium: team.stadium || '',
@@ -122,22 +133,29 @@ const AdminTeams = () => {
     setCurrentId(team._id);
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this team?')) {
-      try {
-        const config = {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        };
-        
-        await axios.delete(`${API_URL}/teams/${id}`, config);
-        fetchData();
-      } catch (err) {
-        console.error('Error deleting team:', err);
-        setError('Failed to delete team');
+  const handleDelete = async (id, teamName) => {
+    confirm({
+      title: 'Delete Team',
+      message: `Are you sure you want to delete the team "${teamName}"? This will also remove the team from all standings tables. This action cannot be undone.`,
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      type: 'danger',
+      onConfirm: async () => {
+        try {
+          const config = {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          };
+          
+          await axios.delete(`${API_URL}/teams/${id}`, config);
+          fetchData();
+        } catch (err) {
+          console.error('Error deleting team:', err);
+          setError('Failed to delete team');
+        }
       }
-    }
+    });
   };
 
   const resetForm = () => {
@@ -166,6 +184,7 @@ const AdminTeams = () => {
 
   return (
     <div>
+      <ConfirmationModal {...modalProps} />
       <h1 className="text-2xl font-bold mb-6">Manage Teams</h1>
       
       {error && (
@@ -380,7 +399,15 @@ const AdminTeams = () => {
                   <td className="p-4">{team.stadium || '-'}</td>
                   <td className="p-4">
                     <div className="max-w-xs truncate">
-                      {team.leagues?.map(l => l.name).join(', ') || '-'}
+                      {(() => {
+                        if (team.leagues && Array.isArray(team.leagues) && team.leagues.length > 0) {
+                          return team.leagues.map(l => l.name).join(', ');
+                        } else if (team.league && team.league.name) {
+                          return team.league.name;
+                        } else {
+                          return '-';
+                        }
+                      })()}
                     </div>
                   </td>
                   <td className="p-4">
@@ -402,7 +429,7 @@ const AdminTeams = () => {
                       Edit
                     </button>
                     <button
-                      onClick={() => handleDelete(team._id)}
+                      onClick={() => handleDelete(team._id, team.name)}
                       className="text-red-500 hover:text-red-400"
                     >
                       Delete

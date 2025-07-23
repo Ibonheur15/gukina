@@ -140,19 +140,10 @@ exports.getLeagueById = async (req, res) => {
       if (standings.length === 0 && teams.length > 0) {
         console.log('No standings found, generating standings for season:', currentSeason);
         
-        // Try to generate standings from actual match data first
-        const matchData = await Match.find({
-          league: req.params.id,
-          season: currentSeason,
-          status: 'ended' // Only count completed matches
-        }).populate('homeTeam awayTeam');
-        
-        console.log(`Found ${matchData.length} completed matches for standings calculation`);
-        
         // Create standings map to track team statistics
         const standingsMap = {};
         
-        // Initialize standings for all teams
+        // Initialize standings for all teams with 0 points
         teams.forEach((team, index) => {
           standingsMap[team._id.toString()] = {
             team: team._id,
@@ -170,6 +161,15 @@ exports.getLeagueById = async (req, res) => {
             lastUpdated: new Date()
           };
         });
+        
+        // Try to generate standings from actual match data
+        const matchData = await Match.find({
+          league: req.params.id,
+          season: currentSeason,
+          status: 'ended' // Only count completed matches
+        }).populate('homeTeam awayTeam');
+        
+        console.log(`Found ${matchData.length} completed matches for standings calculation`);
         
         // Calculate standings from match data if available
         if (matchData.length > 0) {
@@ -222,20 +222,6 @@ exports.getLeagueById = async (req, res) => {
             standingsMap[homeTeamId].form = standingsMap[homeTeamId].form.slice(0, 5);
             standingsMap[awayTeamId].form = standingsMap[awayTeamId].form.slice(0, 5);
           });
-        } else {
-          console.log('No match data found, using default values');
-          // If no match data, use default values for better UI display
-          teams.forEach((team, index) => {
-            const teamId = team._id.toString();
-            standingsMap[teamId].played = 10;
-            standingsMap[teamId].won = Math.floor(Math.random() * 6); // 0-5 wins
-            standingsMap[teamId].drawn = Math.floor(Math.random() * 4); // 0-3 draws
-            standingsMap[teamId].lost = 10 - standingsMap[teamId].won - standingsMap[teamId].drawn;
-            standingsMap[teamId].goalsFor = standingsMap[teamId].won * 2 + standingsMap[teamId].drawn;
-            standingsMap[teamId].goalsAgainst = standingsMap[teamId].lost * 2;
-            standingsMap[teamId].points = (standingsMap[teamId].won * 3) + standingsMap[teamId].drawn;
-            standingsMap[teamId].form = ['W', 'D', 'L', 'W', 'D'].slice(0, 5);
-          });
         }
         
         // Convert map to array and sort by points
@@ -283,15 +269,16 @@ exports.getLeagueById = async (req, res) => {
       // Continue with empty standings array
     }
     
-    // Add goal difference and format standings for response
-    const formattedStandings = standings.map(standing => {
-      const goalDifference = standing.goalsFor - standing.goalsAgainst;
-      return {
-        ...standing.toObject(),
-        goalDifference,
-        team: standing.team || { name: 'Unknown Team', shortName: 'UNK', logo: null }
-      };
-    });
+    // Filter out standings with missing teams and add goal difference
+    const formattedStandings = standings
+      .filter(standing => standing.team) // Only include standings with valid teams
+      .map(standing => {
+        const goalDifference = standing.goalsFor - standing.goalsAgainst;
+        return {
+          ...standing.toObject(),
+          goalDifference
+        };
+      });
     
     res.status(200).json({
       league,

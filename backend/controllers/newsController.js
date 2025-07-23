@@ -25,6 +25,20 @@ exports.getFeaturedNews = async (req, res) => {
   }
 };
 
+// Get latest news
+exports.getLatestNews = async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 3;
+    const news = await News.find({ active: true })
+      .populate('author', 'name')
+      .sort({ createdAt: -1 })
+      .limit(limit);
+    res.status(200).json(news);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // Get news by category
 exports.getNewsByCategory = async (req, res) => {
   try {

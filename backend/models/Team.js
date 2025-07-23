@@ -25,6 +25,10 @@ const teamSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'League'
     },
+    leagues: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'League'
+    }],
     popularity: {
       type: Number,
       default: 0

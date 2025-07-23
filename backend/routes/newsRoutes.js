@@ -6,6 +6,7 @@ const { protect, admin } = require('../middleware/authMiddleware');
 // Public routes
 router.get('/', newsController.getAllNews);
 router.get('/featured', newsController.getFeaturedNews);
+router.get('/latest', newsController.getLatestNews);
 router.get('/category/:category', newsController.getNewsByCategory);
 router.get('/:id', newsController.getNewsById);
 

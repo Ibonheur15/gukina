@@ -15,6 +15,7 @@ const newsRoutes = require('./routes/newsRoutes');
 const leagueStandingRoutes = require('./routes/leagueStandingRoutes');
 const seasonRoutes = require('./routes/seasonRoutes');
 const fixRoutes = require('./routes/fixRoutes');
+const standingsRoutes = require('./routes/standingsRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -32,9 +33,10 @@ app.use('/api/teams', teamRoutes);
 app.use('/api/matches', matchRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/news', newsRoutes);
-app.use('/api/standings', leagueStandingRoutes);
+app.use('/api/league-standings', leagueStandingRoutes);
 app.use('/api/seasons', seasonRoutes);
 app.use('/api/fix', fixRoutes);
+app.use('/api/standings', standingsRoutes);
 
 // Root route
 app.get('/', (req, res) => {
@@ -84,7 +86,18 @@ mongoose
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
-  .then(() => console.log('MongoDB connected'))
+  .then(async () => {
+    console.log('MongoDB connected');
+    
+    // Run startup scripts
+    try {
+      const ensureTeamsInStandings = require('./startup/ensureTeamsInStandings');
+      const result = await ensureTeamsInStandings();
+      console.log('Startup script completed:', result);
+    } catch (error) {
+      console.error('Error running startup scripts:', error);
+    }
+  })
   .catch((err) => console.log('MongoDB connection error:', err));
 
 // Add connection event listeners

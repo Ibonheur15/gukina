@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { leagueService, teamService } from '../utils/api';
+import { leagueService, teamService, newsService } from '../utils/api';
+import { format } from 'date-fns';
 import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/solid';
 
 const Sidebar = ({ isOpen, onClose }) => {
@@ -8,10 +9,12 @@ const Sidebar = ({ isOpen, onClose }) => {
   const [regions, setRegions] = useState([]);
   const [popularTeams, setPopularTeams] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [latestNews, setLatestNews] = useState([]);
   const [openSections, setOpenSections] = useState({
     competitions: true, // Open by default
     regions: false,
-    teams: false
+    teams: false,
+    news: true // Open by default
   });
 
   useEffect(() => {
@@ -61,6 +64,15 @@ const Sidebar = ({ isOpen, onClose }) => {
         // Fetch popular teams
         const teamsRes = await teamService.getPopular(12);
         setPopularTeams(teamsRes.data || []);
+        
+        // Fetch latest news
+        try {
+          const newsRes = await newsService.getLatest(3);
+          setLatestNews(newsRes.data || []);
+        } catch (err) {
+          console.error('Error fetching latest news:', err);
+          setLatestNews([]);
+        }
         
         setLoading(false);
       } catch (err) {
@@ -215,7 +227,7 @@ const Sidebar = ({ isOpen, onClose }) => {
             </div>
             
             {/* Teams */}
-            <div>
+            <div className="mb-6">
               <button 
                 onClick={() => toggleSection('teams')} 
                 className="flex justify-between items-center w-full text-left mb-2"
@@ -257,6 +269,63 @@ const Sidebar = ({ isOpen, onClose }) => {
                   ) : (
                     <li className="text-sm text-gray-500 p-2">No teams available</li>
                   )}
+                </ul>
+              )}
+            </div>
+            
+            {/* Latest News */}
+            <div>
+              <button 
+                onClick={() => toggleSection('news')} 
+                className="flex justify-between items-center w-full text-left mb-2"
+              >
+                <h3 className="text-sm font-semibold text-gray-400 uppercase">Latest News</h3>
+                {openSections.news ? (
+                  <ChevronUpIcon className="h-4 w-4 text-gray-400" />
+                ) : (
+                  <ChevronDownIcon className="h-4 w-4 text-gray-400" />
+                )}
+              </button>
+              
+              {openSections.news && (
+                <ul className="space-y-3">
+                  {latestNews.length > 0 ? (
+                    latestNews.map(news => (
+                      <li key={news._id} className="border-b border-dark-300 pb-3 last:border-0">
+                        <Link 
+                          to={`/news/${news._id}`}
+                          className="hover:text-primary"
+                          onClick={onClose}
+                        >
+                          {news.image && (
+                            <img 
+                              src={news.image} 
+                              alt={news.title} 
+                              className="w-full h-24 object-cover rounded-md mb-2" 
+                            />
+                          )}
+                          <h4 className="text-sm font-medium line-clamp-2">{news.title}</h4>
+                          <div className="flex items-center mt-1 text-xs text-gray-400">
+                            <span>{format(new Date(news.createdAt), 'MMM d, yyyy')}</span>
+                          </div>
+                        </Link>
+                      </li>
+                    ))
+                  ) : (
+                    <li className="text-sm text-gray-500 p-2">No news available</li>
+                  )}
+                  <li>
+                    <Link 
+                      to="/news"
+                      className="text-primary text-sm hover:underline flex items-center"
+                      onClick={onClose}
+                    >
+                      View all news
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </Link>
+                  </li>
                 </ul>
               )}
             </div>

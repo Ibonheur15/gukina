@@ -34,7 +34,13 @@ const matchSchema = new mongoose.Schema(
     awayTeam: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Team',
-      required: true
+      required: true,
+      validate: {
+        validator: function(awayTeamId) {
+          return !awayTeamId.equals(this.homeTeam);
+        },
+        message: 'Home team and away team cannot be the same'
+      }
     },
     league: {
       type: mongoose.Schema.Types.ObjectId,

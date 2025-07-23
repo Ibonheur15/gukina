@@ -86,9 +86,23 @@ exports.getLeagueStandings = async (req, res) => {
       }
     }
     
-    // Return standings
-    console.log('Returning standings to client');
-    res.status(200).json(standings);
+    // Filter out standings with missing teams
+    const validStandings = standings.filter(standing => standing.team);
+    
+    // If some standings were filtered out, recalculate positions
+    if (validStandings.length < standings.length) {
+      console.log(`Filtered out ${standings.length - validStandings.length} standings with missing teams`);
+      
+      // Recalculate positions
+      for (let i = 0; i < validStandings.length; i++) {
+        validStandings[i].position = i + 1;
+        await validStandings[i].save();
+      }
+    }
+    
+    // Return valid standings
+    console.log(`Returning ${validStandings.length} valid standings to client`);
+    res.status(200).json(validStandings);
   } catch (error) {
     console.error('Error fetching standings:', error);
     // Return empty array instead of error

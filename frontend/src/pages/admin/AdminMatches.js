@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { format, parseISO } from 'date-fns';
 import { useAuth } from '../../context/AuthContext';
+import ConfirmationModal from '../../components/ConfirmationModal';
+import useConfirmation from '../../hooks/useConfirmation';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
@@ -13,6 +15,7 @@ const AdminMatches = () => {
   const [teams, setTeams] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { confirm, modalProps } = useConfirmation();
   const [formData, setFormData] = useState({
     homeTeam: '',
     awayTeam: '',
@@ -100,12 +103,22 @@ const AdminMatches = () => {
   const handleChange = (e) => {
     const { name, value, type } = e.target;
     
+    // Clear any previous errors
+    setError(null);
+    
     if (type === 'number') {
       setFormData({
         ...formData,
         [name]: parseInt(value, 10) || 0
       });
     } else {
+      // Check if selecting the same team for home and away
+      if (name === 'homeTeam' && value === formData.awayTeam && value !== '') {
+        setError('Home team and away team cannot be the same');
+      } else if (name === 'awayTeam' && value === formData.homeTeam && value !== '') {
+        setError('Home team and away team cannot be the same');
+      }
+      
       setFormData({
         ...formData,
         [name]: value
@@ -115,6 +128,13 @@ const AdminMatches = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Check if home team and away team are the same
+    if (formData.homeTeam === formData.awayTeam) {
+      setError('Home team and away team cannot be the same');
+      return;
+    }
+    
     try {
       const config = {
         headers: {
@@ -169,22 +189,29 @@ const AdminMatches = () => {
     setCurrentId(match._id);
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this match?')) {
-      try {
-        const config = {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        };
-        
-        await axios.delete(`${API_URL}/matches/${id}`, config);
-        fetchData();
-      } catch (err) {
-        console.error('Error deleting match:', err);
-        setError('Failed to delete match');
+  const handleDelete = async (id, homeTeam, awayTeam) => {
+    confirm({
+      title: 'Delete Match',
+      message: `Are you sure you want to delete the match between ${homeTeam} and ${awayTeam}? This action cannot be undone.`,
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      type: 'danger',
+      onConfirm: async () => {
+        try {
+          const config = {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          };
+          
+          await axios.delete(`${API_URL}/matches/${id}`, config);
+          fetchData();
+        } catch (err) {
+          console.error('Error deleting match:', err);
+          setError('Failed to delete match');
+        }
       }
-    }
+    });
   };
 
   const handleStatusUpdate = async (id, status) => {
@@ -315,6 +342,7 @@ const AdminMatches = () => {
 
   return (
     <div>
+      <ConfirmationModal {...modalProps} />
       <h1 className="text-2xl font-bold mb-6">Manage Matches</h1>
       
       {error && (
@@ -616,7 +644,7 @@ const AdminMatches = () => {
                           Events
                         </Link>
                         <button
-                          onClick={() => handleDelete(match._id)}
+                          onClick={() => handleDelete(match._id, match.homeTeam.name, match.awayTeam.name)}
                           className="text-red-500 hover:text-red-400"
                         >
                           Delete

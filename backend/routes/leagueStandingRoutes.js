@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const leagueStandingController = require('../controllers/leagueStandingController');
-const { protect, restrictTo } = require('../middleware/auth');
+const { protect, admin } = require('../middleware/authMiddleware');
 
 // Public routes
 router.get('/league/:leagueId', leagueStandingController.getLeagueStandings);
@@ -9,13 +9,13 @@ router.get('/league/:leagueId', leagueStandingController.getLeagueStandings);
 // Protected routes (admin/editor only)
 router.put('/league/:leagueId/team/:teamId', 
   protect, 
-  restrictTo('admin', 'editor'), 
+  admin, 
   leagueStandingController.updateTeamStanding
 );
 
 router.post('/match/:matchId', 
   protect, 
-  restrictTo('admin', 'editor'), 
+  admin, 
   leagueStandingController.updateStandingsFromMatch
 );
 

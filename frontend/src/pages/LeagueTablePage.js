@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { format } from 'date-fns';
+import axios from 'axios';
 import { leagueService, standingService, seasonService, fixService } from '../utils/api';
+import { useAuth } from '../context/AuthContext';
 import MatchCard from '../components/MatchCard';
 
 // Helper function to format season display (e.g., "2023/24")
@@ -9,8 +11,11 @@ const formatSeasonDisplay = (seasonYear) => {
   return `${seasonYear}/${(parseInt(seasonYear) + 1).toString().slice(-2)}`;
 };
 
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+
 const LeagueTablePage = () => {
   const { leagueId } = useParams();
+  const { token } = useAuth();
   const [leagueData, setLeagueData] = useState(null);
   const [standings, setStandings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -246,30 +251,21 @@ const LeagueTablePage = () => {
                 </tr>
               </thead>
               <tbody>
-                {standings.length > 0 ? (
-                  standings.map((standing) => (
+                {standings.filter(standing => standing.team).length > 0 ? (
+                  standings.filter(standing => standing.team).map((standing) => (
                     <tr key={standing._id} className="border-t border-dark-300 hover:bg-dark-300">
                       <td className="px-4 py-3 text-center">{standing.position}</td>
                       <td className="px-4 py-3">
-                        {standing.team ? (
-                          <Link to={`/team/${standing.team._id}`} className="flex items-center">
-                            {standing.team.logo ? (
-                              <img src={standing.team.logo} alt={standing.team.name} className="w-6 h-6 mr-2 object-contain" />
-                            ) : (
-                              <div className="w-6 h-6 bg-dark-400 rounded-full mr-2 flex items-center justify-center">
-                                <span className="text-xs">{standing.team.shortName ? standing.team.shortName.substring(0, 2) : (standing.team.name ? standing.team.name.substring(0, 2) : 'T')}</span>
-                              </div>
-                            )}
-                            <span>{standing.team.name || 'Unknown Team'}</span>
-                          </Link>
-                        ) : (
-                          <div className="flex items-center">
+                        <Link to={`/team/${standing.team._id}`} className="flex items-center">
+                          {standing.team.logo ? (
+                            <img src={standing.team.logo} alt={standing.team.name} className="w-6 h-6 mr-2 object-contain" />
+                          ) : (
                             <div className="w-6 h-6 bg-dark-400 rounded-full mr-2 flex items-center justify-center">
-                              <span className="text-xs">?</span>
+                              <span className="text-xs">{standing.team.shortName ? standing.team.shortName.substring(0, 2) : (standing.team.name ? standing.team.name.substring(0, 2) : 'T')}</span>
                             </div>
-                            <span>Unknown Team</span>
-                          </div>
-                        )}
+                          )}
+                          <span>{standing.team.name}</span>
+                        </Link>
                       </td>
                       <td className="px-4 py-3 text-center">{standing.played}</td>
                       <td className="px-4 py-3 text-center">{standing.won}</td>
@@ -301,7 +297,7 @@ const LeagueTablePage = () => {
                       <p>No standings data available for this season</p>
                       {teams && teams.length > 0 && (
                         <div className="mt-4">
-                          <p className="mb-2">Standings will be generated from match results.</p>
+                          <p className="mb-2">Standings will be generated automatically.</p>
                           <div className="flex justify-center space-x-4">
                             <button 
                               onClick={() => window.location.reload()} 
@@ -311,51 +307,33 @@ const LeagueTablePage = () => {
                             </button>
                             <button 
                               onClick={() => {
-                                console.log('League Data:', leagueData);
-                                console.log('Teams:', teams);
-                                console.log('Standings:', standings);
-                                console.log('Current Season:', season);
-                                
-                                // Try to refresh with a new request
-                                leagueService.getById(leagueId, season)
-                                  .then(res => {
-                                    console.log('Refresh response:', res.data);
-                                    if (res.data.standings && res.data.standings.length > 0) {
-                                      setStandings(res.data.standings);
-                                      alert('Standings loaded! Refresh the page to see them.');
-                                    } else {
-                                      alert('No standings found. Check browser console for debug info.');
-                                    }
-                                  })
-                                  .catch(err => {
-                                    console.error('Refresh error:', err);
-                                    alert('Error refreshing data. Check browser console.');
-                                  });
-                              }} 
-                              className="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700"
-                            >
-                              Debug & Refresh
-                            </button>
-                            <button 
-                              onClick={() => {
                                 // Show loading message
-                                alert('Fixing league data... This may take a moment.');
+                                alert('Recalculating standings from match results... This may take a moment.');
                                 
-                                // Call fix endpoint
-                                fixService.fixLeagueData(leagueId)
+                                // Call recalculate endpoint
+                                axios.post(
+                                  `${API_URL}/standings/recalculate/${leagueId}`,
+                                  { season: season },
+                                  {
+                                    headers: {
+                                      'Content-Type': 'application/json',
+                                      Authorization: `Bearer ${token}`
+                                    }
+                                  }
+                                )
                                   .then(res => {
-                                    console.log('Fix response:', res.data);
-                                    alert(`League data fixed! ${res.data.results.matchesFixed} matches fixed, ${res.data.results.standingsGenerated} standings generated. Refreshing page...`);
+                                    console.log('Recalculate response:', res.data);
+                                    alert(`Standings recalculated successfully! Refreshing page...`);
                                     window.location.reload();
                                   })
                                   .catch(err => {
-                                    console.error('Fix error:', err);
-                                    alert('Error fixing data. Check browser console.');
+                                    console.error('Recalculate error:', err);
+                                    alert('Error recalculating standings. Please try again.');
                                   });
                               }} 
                               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
                             >
-                              Fix Data
+                              Recalculate Standings
                             </button>
                           </div>
                         </div>

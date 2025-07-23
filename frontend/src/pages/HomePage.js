@@ -171,19 +171,7 @@ const HomePage = () => {
         </Link>
       </div>
 
-      {/* API Status Message */}
-      {(!liveMatches.length && !todayMatches.length) && (
-        <div className="bg-yellow-500 bg-opacity-10 border border-yellow-500 text-yellow-500 p-4 rounded-md mb-6">
-          <p>The API may be experiencing issues or there are no matches available.</p>
-          <p className="mt-2">This is a demo application - sample data will be displayed soon.</p>
-          <button 
-            onClick={() => window.location.reload()} 
-            className="mt-4 px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600"
-          >
-            Refresh Data
-          </button>
-        </div>
-      )}
+      {/* Empty state handled in the Today's Matches section */}
 
       {/* Live Matches Section */}
       {liveMatches.length > 0 && (
@@ -237,7 +225,13 @@ const HomePage = () => {
           ))
         ) : (
           <div className="bg-dark-200 rounded-lg p-6 text-center">
-            <p className="text-gray-400">No matches scheduled for today</p>
+            <p className="text-gray-400">No matches scheduled for {activeDate === 'today' ? 'today' : activeDate}</p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="mt-4 px-4 py-2 bg-dark-300 text-white rounded-md hover:bg-dark-400"
+            >
+              Refresh
+            </button>
           </div>
         )}
       </div>

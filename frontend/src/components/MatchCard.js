@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 
-const MatchCard = ({ match }) => {
+const MatchCard = ({ match, highlightTeam }) => {
   // Check if match has required data
   if (!match || !match.homeTeam || !match.awayTeam) {
     return (
@@ -35,7 +35,7 @@ const MatchCard = ({ match }) => {
   };
 
   return (
-    <Link to={`/match/${match._id}`} className="match-card block">
+    <div className={`match-card block bg-dark-200 p-3 rounded-md hover:bg-dark-300 ${highlightTeam ? 'transition-all duration-200' : ''}`}>
       <div className="flex items-center">
         <div className="w-16 text-center">
           {getStatusDisplay()}
@@ -51,7 +51,9 @@ const MatchCard = ({ match }) => {
                   <span className="text-xs">{match.homeTeam.shortName ? match.homeTeam.shortName.substring(0, 2) : match.homeTeam.name.substring(0, 2)}</span>
                 )}
               </div>
-              <span className="font-medium">{match.homeTeam.name}</span>
+              <span className={`font-medium ${highlightTeam === match.homeTeam._id ? 'text-primary' : ''}`}>
+                {match.homeTeam.name}
+              </span>
             </div>
             
             {(match.status === 'live' || match.status === 'halftime' || match.status === 'ended') && (
@@ -68,7 +70,9 @@ const MatchCard = ({ match }) => {
                   <span className="text-xs">{match.awayTeam.shortName ? match.awayTeam.shortName.substring(0, 2) : match.awayTeam.name.substring(0, 2)}</span>
                 )}
               </div>
-              <span className="font-medium">{match.awayTeam.name}</span>
+              <span className={`font-medium ${highlightTeam === match.awayTeam._id ? 'text-primary' : ''}`}>
+                {match.awayTeam.name}
+              </span>
             </div>
             
             {(match.status === 'live' || match.status === 'halftime' || match.status === 'ended') && (
@@ -85,7 +89,7 @@ const MatchCard = ({ match }) => {
           </button>
         </div>
       </div>
-    </Link>
+    </div>
   );
 };
 
