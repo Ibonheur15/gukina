@@ -5,6 +5,28 @@ const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 console.log('API URL:', API_URL); // Debug log to see what URL is being used
 
+// Simple in-memory cache
+const cache = {
+  data: {},
+  timeout: {},
+  get: (key) => {
+    const item = cache.data[key];
+    const expiry = cache.timeout[key];
+    if (item && expiry && expiry > Date.now()) {
+      return item;
+    }
+    return null;
+  },
+  set: (key, value, ttl = 60000) => { // Default TTL: 1 minute
+    cache.data[key] = value;
+    cache.timeout[key] = Date.now() + ttl;
+  },
+  clear: () => {
+    cache.data = {};
+    cache.timeout = {};
+  }
+};
+
 // Create axios instance
 const api = axios.create({
   baseURL: API_URL,
@@ -28,9 +50,59 @@ api.interceptors.request.use(
   }
 );
 
-// Add response interceptor for better error handling
+// Add request interceptor for caching GET requests
+api.interceptors.request.use(
+  async (config) => {
+    // Only cache GET requests
+    if (config.method === 'get') {
+      const cacheKey = `${config.url}${JSON.stringify(config.params || {})}`;
+      const cachedResponse = cache.get(cacheKey);
+      
+      if (cachedResponse) {
+        // Return cached response in the format expected by axios
+        return {
+          ...config,
+          adapter: () => Promise.resolve({
+            data: cachedResponse,
+            status: 200,
+            statusText: 'OK',
+            headers: {},
+            config,
+            request: {}
+          }),
+          fromCache: true
+        };
+      }
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// Add response interceptor for caching and error handling
 api.interceptors.response.use(
   (response) => {
+    // Cache successful GET responses
+    if (response.config.method === 'get' && !response.config.fromCache) {
+      const cacheKey = `${response.config.url}${JSON.stringify(response.config.params || {})}`;
+      
+      // Different cache TTL based on endpoint type
+      let ttl = 60000; // Default: 1 minute
+      
+      // Static data can be cached longer
+      if (response.config.url.includes('/countries') || 
+          response.config.url.includes('/teams') || 
+          response.config.url.includes('/leagues')) {
+        ttl = 300000; // 5 minutes
+      }
+      
+      // Live data should be cached for shorter periods
+      if (response.config.url.includes('/matches/live')) {
+        ttl = 30000; // 30 seconds
+      }
+      
+      cache.set(cacheKey, response.data, ttl);
+    }
     return response;
   },
   (error) => {
@@ -112,6 +184,11 @@ export const authService = {
   register: (userData) => api.post('/auth/register', userData),
   getCurrentUser: () => api.get('/auth/me'),
   createAdmin: (userData) => api.post('/auth/admin', userData),
+};
+
+// Function to clear cache (useful after POST/PUT/DELETE operations)
+export const clearApiCache = () => {
+  cache.clear();
 };
 
 export default api;

@@ -1,79 +1,178 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
-import HomePage from './pages/HomePage';
-import FixturesPage from './pages/FixturesPage';
-import LeagueTablePage from './pages/LeagueTablePage';
-import TeamPage from './pages/TeamPage';
-import MatchPage from './pages/MatchPage';
-import SearchPage from './pages/SearchPage';
-import NewsPage from './pages/NewsPage';
-import SingleNewsPage from './pages/SingleNewsPage';
-import CalendarPage from './pages/CalendarPage';
-import CompetitionsPage from './pages/CompetitionsPage';
-import TeamsPage from './pages/TeamsPage';
-import MatchesPage from './pages/MatchesPage';
-import AdminLayout from './components/admin/AdminLayout';
-import AdminDashboard from './pages/admin/AdminDashboard';
-import AdminCountries from './pages/admin/AdminCountries';
-import AdminLeagues from './pages/admin/AdminLeagues';
-import AdminTeams from './pages/admin/AdminTeams';
-import AdminMatches from './pages/admin/AdminMatches';
-import AdminLeagueStandings from './pages/admin/AdminLeagueStandings';
-import MatchEventsPage from './pages/admin/MatchEventsPage';
-import EventsListPage from './pages/admin/EventsListPage';
-import AdminNews from './pages/admin/AdminNews';
-import LoginPage from './pages/LoginPage';
-import ProtectedRoute from './components/ProtectedRoute';
 import { useAuth } from './context/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
+
+// Lazy load components
+const HomePage = lazy(() => import('./pages/HomePage'));
+const FixturesPage = lazy(() => import('./pages/FixturesPage'));
+const LeagueTablePage = lazy(() => import('./pages/LeagueTablePage'));
+const TeamPage = lazy(() => import('./pages/TeamPage'));
+const MatchPage = lazy(() => import('./pages/MatchPage'));
+const SearchPage = lazy(() => import('./pages/SearchPage'));
+const NewsPage = lazy(() => import('./pages/NewsPage'));
+const SingleNewsPage = lazy(() => import('./pages/SingleNewsPage'));
+const CalendarPage = lazy(() => import('./pages/CalendarPage'));
+const CompetitionsPage = lazy(() => import('./pages/CompetitionsPage'));
+const TeamsPage = lazy(() => import('./pages/TeamsPage'));
+const MatchesPage = lazy(() => import('./pages/MatchesPage'));
+const LoginPage = lazy(() => import('./pages/LoginPage'));
+
+// Admin components
+const AdminLayout = lazy(() => import('./components/admin/AdminLayout'));
+const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
+const AdminCountries = lazy(() => import('./pages/admin/AdminCountries'));
+const AdminLeagues = lazy(() => import('./pages/admin/AdminLeagues'));
+const AdminTeams = lazy(() => import('./pages/admin/AdminTeams'));
+const AdminMatches = lazy(() => import('./pages/admin/AdminMatches'));
+const AdminLeagueStandings = lazy(() => import('./pages/admin/AdminLeagueStandings'));
+const MatchEventsPage = lazy(() => import('./pages/admin/MatchEventsPage'));
+const EventsListPage = lazy(() => import('./pages/admin/EventsListPage'));
+const AdminNews = lazy(() => import('./pages/admin/AdminNews'));
 
 function App() {
   const { loading } = useAuth();
 
+  // Loading spinner component
+  const LoadingSpinner = () => (
+    <div className="flex items-center justify-center h-screen">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+    </div>
+  );
+
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   return (
-    <Routes>
-      {/* Public Routes */}
-      <Route path="/" element={<Layout />}>
-        <Route index element={<HomePage />} />
-        <Route path="fixtures" element={<FixturesPage />} />
-        <Route path="news" element={<NewsPage />} />
-        <Route path="news/:newsId" element={<SingleNewsPage />} />
-        <Route path="calendar" element={<CalendarPage />} />
-        <Route path="competitions" element={<CompetitionsPage />} />
-        <Route path="teams" element={<TeamsPage />} />
-        <Route path="matches" element={<MatchesPage />} />
-        <Route path="league/:leagueId" element={<LeagueTablePage />} />
-        <Route path="team/:teamId" element={<TeamPage />} />
-        <Route path="match/:matchId" element={<MatchPage />} />
-        <Route path="search" element={<SearchPage />} />
-        <Route path="login" element={<LoginPage />} />
-      </Route>
+    <Suspense fallback={<LoadingSpinner />}>
+      <Routes>
+        {/* Public Routes */}
+        <Route path="/" element={<Layout />}>
+          <Route index element={
+            <Suspense fallback={<LoadingSpinner />}>
+              <HomePage />
+            </Suspense>
+          } />
+          <Route path="fixtures" element={
+            <Suspense fallback={<LoadingSpinner />}>
+              <FixturesPage />
+            </Suspense>
+          } />
+          <Route path="news" element={
+            <Suspense fallback={<LoadingSpinner />}>
+              <NewsPage />
+            </Suspense>
+          } />
+          <Route path="news/:newsId" element={
+            <Suspense fallback={<LoadingSpinner />}>
+              <SingleNewsPage />
+            </Suspense>
+          } />
+          <Route path="calendar" element={
+            <Suspense fallback={<LoadingSpinner />}>
+              <CalendarPage />
+            </Suspense>
+          } />
+          <Route path="competitions" element={
+            <Suspense fallback={<LoadingSpinner />}>
+              <CompetitionsPage />
+            </Suspense>
+          } />
+          <Route path="teams" element={
+            <Suspense fallback={<LoadingSpinner />}>
+              <TeamsPage />
+            </Suspense>
+          } />
+          <Route path="matches" element={
+            <Suspense fallback={<LoadingSpinner />}>
+              <MatchesPage />
+            </Suspense>
+          } />
+          <Route path="league/:leagueId" element={
+            <Suspense fallback={<LoadingSpinner />}>
+              <LeagueTablePage />
+            </Suspense>
+          } />
+          <Route path="team/:teamId" element={
+            <Suspense fallback={<LoadingSpinner />}>
+              <TeamPage />
+            </Suspense>
+          } />
+          <Route path="match/:matchId" element={
+            <Suspense fallback={<LoadingSpinner />}>
+              <MatchPage />
+            </Suspense>
+          } />
+          <Route path="search" element={
+            <Suspense fallback={<LoadingSpinner />}>
+              <SearchPage />
+            </Suspense>
+          } />
+          <Route path="login" element={
+            <Suspense fallback={<LoadingSpinner />}>
+              <LoginPage />
+            </Suspense>
+          } />
+        </Route>
 
-      {/* Admin Routes */}
-      <Route path="/admin" element={
-        <ProtectedRoute>
-          <AdminLayout />
-        </ProtectedRoute>
-      }>
-        <Route index element={<AdminDashboard />} />
-        <Route path="countries" element={<AdminCountries />} />
-        <Route path="leagues" element={<AdminLeagues />} />
-        <Route path="leagues/:leagueId/standings" element={<AdminLeagueStandings />} />
-        <Route path="teams" element={<AdminTeams />} />
-        <Route path="matches" element={<AdminMatches />} />
-        <Route path="matches/:matchId/events" element={<MatchEventsPage />} />
-        <Route path="events" element={<EventsListPage />} />
-        <Route path="news" element={<AdminNews />} />
-      </Route>
-    </Routes>
+        {/* Admin Routes */}
+        <Route path="/admin" element={
+          <ProtectedRoute>
+            <Suspense fallback={<LoadingSpinner />}>
+              <AdminLayout />
+            </Suspense>
+          </ProtectedRoute>
+        }>
+          <Route index element={
+            <Suspense fallback={<LoadingSpinner />}>
+              <AdminDashboard />
+            </Suspense>
+          } />
+          <Route path="countries" element={
+            <Suspense fallback={<LoadingSpinner />}>
+              <AdminCountries />
+            </Suspense>
+          } />
+          <Route path="leagues" element={
+            <Suspense fallback={<LoadingSpinner />}>
+              <AdminLeagues />
+            </Suspense>
+          } />
+          <Route path="leagues/:leagueId/standings" element={
+            <Suspense fallback={<LoadingSpinner />}>
+              <AdminLeagueStandings />
+            </Suspense>
+          } />
+          <Route path="teams" element={
+            <Suspense fallback={<LoadingSpinner />}>
+              <AdminTeams />
+            </Suspense>
+          } />
+          <Route path="matches" element={
+            <Suspense fallback={<LoadingSpinner />}>
+              <AdminMatches />
+            </Suspense>
+          } />
+          <Route path="matches/:matchId/events" element={
+            <Suspense fallback={<LoadingSpinner />}>
+              <MatchEventsPage />
+            </Suspense>
+          } />
+          <Route path="events" element={
+            <Suspense fallback={<LoadingSpinner />}>
+              <EventsListPage />
+            </Suspense>
+          } />
+          <Route path="news" element={
+            <Suspense fallback={<LoadingSpinner />}>
+              <AdminNews />
+            </Suspense>
+          } />
+        </Route>
+      </Routes>
+    </Suspense>
   );
 }
 
