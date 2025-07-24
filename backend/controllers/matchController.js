@@ -295,6 +295,12 @@ exports.addMatchEvent = async (req, res) => {
     
     await match.save();
     
+    // Update live standings if match is live
+    if (['live', 'halftime'].includes(match.status)) {
+      const liveStandingsService = require('../services/liveStandingsService');
+      await liveStandingsService.updateLiveStandings(match._id, req.body);
+    }
+    
     const updatedMatch = await Match.findById(req.params.id)
       .populate('homeTeam', 'name shortName logo')
       .populate('awayTeam', 'name shortName logo')

@@ -32,6 +32,25 @@ const LeagueTablePage = () => {
     }
   }, [leagueId]);
 
+  // Auto-refresh for live matches
+  useEffect(() => {
+    let interval;
+    
+    // Check if there are live matches in this league
+    const hasLiveMatches = standings.some(standing => standing.isLive);
+    
+    if (hasLiveMatches) {
+      // Refresh every 30 seconds if there are live matches
+      interval = setInterval(() => {
+        fetchLeagueData();
+      }, 30000);
+    }
+    
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [standings]);
+
   useEffect(() => {
     const fetchLeagueData = async () => {
       try {
@@ -264,7 +283,12 @@ const LeagueTablePage = () => {
                               <span className="text-xs">{standing.team.shortName ? standing.team.shortName.substring(0, 2) : (standing.team.name ? standing.team.name.substring(0, 2) : 'T')}</span>
                             </div>
                           )}
-                          <span>{standing.team.name}</span>
+                          <span className={standing.isLive ? 'text-green-400' : ''}>{standing.team.name}</span>
+                          {standing.isLive && (
+                            <span className="ml-2 px-2 py-1 bg-red-600 text-white text-xs rounded-full animate-pulse">
+                              LIVE
+                            </span>
+                          )}
                         </Link>
                       </td>
                       <td className="px-4 py-3 text-center">{standing.played}</td>

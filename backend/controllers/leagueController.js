@@ -269,14 +269,29 @@ exports.getLeagueById = async (req, res) => {
       // Continue with empty standings array
     }
     
-    // Filter out standings with missing teams and add goal difference
+    // Get live matches for this league to show indicators
+    const liveMatches = await Match.find({
+      league: req.params.id,
+      status: { $in: ['live', 'halftime'] }
+    }).populate('homeTeam awayTeam', '_id name');
+    
+    // Create a set of team IDs that have live matches
+    const liveTeamIds = new Set();
+    liveMatches.forEach(match => {
+      if (match.homeTeam) liveTeamIds.add(match.homeTeam._id.toString());
+      if (match.awayTeam) liveTeamIds.add(match.awayTeam._id.toString());
+    });
+    
+    // Filter out standings with missing teams and add goal difference + live indicator
     const formattedStandings = standings
       .filter(standing => standing.team) // Only include standings with valid teams
       .map(standing => {
         const goalDifference = standing.goalsFor - standing.goalsAgainst;
+        const isLive = liveTeamIds.has(standing.team._id.toString());
         return {
           ...standing.toObject(),
-          goalDifference
+          goalDifference,
+          isLive
         };
       });
     
