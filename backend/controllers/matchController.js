@@ -33,7 +33,18 @@ exports.getLiveMatches = async (req, res) => {
         }
       })
       .sort({ matchDate: 1 });
-    res.status(200).json(matches);
+    
+    // Calculate live minutes for each match
+    const liveTimeService = require('../services/liveTimeService');
+    const matchesWithLiveTime = matches.map(match => {
+      const liveMinute = liveTimeService.calculateLiveMinute(match);
+      return {
+        ...match.toObject(),
+        currentMinute: liveMinute
+      };
+    });
+    
+    res.status(200).json(matchesWithLiveTime);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -180,6 +191,18 @@ exports.getMatchById = async (req, res) => {
     if (!match) {
       return res.status(404).json({ message: 'Match not found' });
     }
+    
+    // Calculate live minute if match is live
+    if (match.status === 'live') {
+      const liveTimeService = require('../services/liveTimeService');
+      const liveMinute = liveTimeService.calculateLiveMinute(match);
+      const matchWithLiveTime = {
+        ...match.toObject(),
+        currentMinute: liveMinute
+      };
+      return res.status(200).json(matchWithLiveTime);
+    }
+    
     res.status(200).json(match);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -446,19 +469,27 @@ exports.updateMatchStatus = async (req, res) => {
       return res.status(404).json({ message: 'Match not found' });
     }
     
-    // Reset currentMinute to 0 when starting or to 45 when second half starts
+    // Handle live timing
     let updateData = { status };
+    const now = new Date();
+    
     if (status === 'live') {
-      // If coming from not_started, set to 1, if coming from halftime, set to 46
       if (match.status === 'not_started') {
-        updateData.currentMinute = 1;
+        // Starting first half
+        updateData.liveStartTime = now;
+        updateData.currentMinute = 0;
       } else if (match.status === 'halftime') {
-        updateData.currentMinute = 46;
+        // Starting second half
+        updateData.halfTimeStartTime = now;
+        updateData.currentMinute = 45;
       }
     } else if (status === 'halftime') {
-      updateData.currentMinute = 45;
+      // Keep current minute when going to halftime
+      updateData.liveStartTime = null;
     } else if (status === 'ended') {
-      updateData.currentMinute = 90;
+      // Keep current minute when ending
+      updateData.liveStartTime = null;
+      updateData.halfTimeStartTime = null;
     }
     
     const updatedMatch = await Match.findByIdAndUpdate(

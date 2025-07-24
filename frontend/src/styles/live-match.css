@@ -1,0 +1,16 @@
+.live-badge {
+  @apply px-1.5 py-0.5 bg-green-600 text-white text-xs rounded-full font-medium;
+}
+
+.live-badge:hover {
+  animation-play-state: paused;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}

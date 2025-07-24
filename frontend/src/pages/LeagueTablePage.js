@@ -32,6 +32,60 @@ const LeagueTablePage = () => {
     }
   }, [leagueId]);
 
+  const fetchLeagueData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      console.log('Fetching league with ID:', leagueId, 'for season:', season);
+      
+      // Fetch league data with season parameter (now includes standings)
+      try {
+        const leagueRes = await leagueService.getById(leagueId, season);
+        console.log('League data received for season', season, ':', leagueRes.data);
+        setLeagueData(leagueRes.data);
+        
+        // Set available seasons from league response
+        if (leagueRes.data.availableSeasons && leagueRes.data.availableSeasons.length > 0) {
+          console.log('Available seasons from API:', leagueRes.data.availableSeasons);
+          setAvailableSeasons(leagueRes.data.availableSeasons);
+        }
+        
+        // Set standings from league response
+        if (leagueRes.data.standings && leagueRes.data.standings.length > 0) {
+          console.log('Standings received from league response:', leagueRes.data.standings.length);
+          setStandings(leagueRes.data.standings);
+        } else {
+          console.log('No standings in league response, checking if we need to generate them');
+          
+          // If we have teams but no standings, show empty state
+          if (leagueRes.data.teams && leagueRes.data.teams.length > 0) {
+            console.log('League has teams but no standings for this season');
+            setStandings([]);
+          } else {
+            console.log('No teams found for this league');
+            setStandings([]);
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching league:', err);
+        if (err.response && err.response.status === 404) {
+          setError('League not found. Please check the league ID.');
+        } else {
+          setError(`Failed to load league: ${err.message || 'Unknown error'}`);
+        }
+        setLoading(false);
+        return;
+      }
+      
+      setLoading(false);
+    } catch (err) {
+      console.error('Error fetching league data:', err);
+      setError(`Failed to load league data: ${err.message || 'Unknown error'}`);
+      setLoading(false);
+    }
+  };
+
   // Auto-refresh for live matches
   useEffect(() => {
     let interval;
@@ -52,60 +106,6 @@ const LeagueTablePage = () => {
   }, [standings]);
 
   useEffect(() => {
-    const fetchLeagueData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        console.log('Fetching league with ID:', leagueId, 'for season:', season);
-        
-        // Fetch league data with season parameter (now includes standings)
-        try {
-          const leagueRes = await leagueService.getById(leagueId, season);
-          console.log('League data received for season', season, ':', leagueRes.data);
-          setLeagueData(leagueRes.data);
-          
-          // Set available seasons from league response
-          if (leagueRes.data.availableSeasons && leagueRes.data.availableSeasons.length > 0) {
-            console.log('Available seasons from API:', leagueRes.data.availableSeasons);
-            setAvailableSeasons(leagueRes.data.availableSeasons);
-          }
-          
-          // Set standings from league response
-          if (leagueRes.data.standings && leagueRes.data.standings.length > 0) {
-            console.log('Standings received from league response:', leagueRes.data.standings.length);
-            setStandings(leagueRes.data.standings);
-          } else {
-            console.log('No standings in league response, checking if we need to generate them');
-            
-            // If we have teams but no standings, show empty state
-            if (leagueRes.data.teams && leagueRes.data.teams.length > 0) {
-              console.log('League has teams but no standings for this season');
-              setStandings([]);
-            } else {
-              console.log('No teams found for this league');
-              setStandings([]);
-            }
-          }
-        } catch (err) {
-          console.error('Error fetching league:', err);
-          if (err.response && err.response.status === 404) {
-            setError('League not found. Please check the league ID.');
-          } else {
-            setError(`Failed to load league: ${err.message || 'Unknown error'}`);
-          }
-          setLoading(false);
-          return;
-        }
-        
-        setLoading(false);
-      } catch (err) {
-        console.error('Error fetching league data:', err);
-        setError(`Failed to load league data: ${err.message || 'Unknown error'}`);
-        setLoading(false);
-      }
-    };
-    
     if (leagueId) {
       fetchLeagueData();
     }
@@ -273,38 +273,33 @@ const LeagueTablePage = () => {
                 {standings.filter(standing => standing.team).length > 0 ? (
                   standings.filter(standing => standing.team).map((standing) => (
                     <tr key={standing._id} className="border-t border-dark-300 hover:bg-dark-300">
-                      <td className="px-4 py-3 text-center">{standing.position}</td>
+                      <td className="px-3 py-2 text-center text-sm">{standing.position}</td>
                       <td className="px-4 py-3">
                         <Link to={`/team/${standing.team._id}`} className="flex items-center">
                           {standing.team.logo ? (
-                            <img src={standing.team.logo} alt={standing.team.name} className="w-6 h-6 mr-2 object-contain" />
+                            <img src={standing.team.logo} alt={standing.team.name} className="w-5 h-5 mr-2 object-contain" />
                           ) : (
-                            <div className="w-6 h-6 bg-dark-400 rounded-full mr-2 flex items-center justify-center">
+                            <div className="w-5 h-5 bg-dark-400 rounded-full mr-2 flex items-center justify-center">
                               <span className="text-xs">{standing.team.shortName ? standing.team.shortName.substring(0, 2) : (standing.team.name ? standing.team.name.substring(0, 2) : 'T')}</span>
                             </div>
                           )}
-                          <span className={standing.isLive ? 'text-green-400' : ''}>{standing.team.name}</span>
-                          {standing.isLive && (
-                            <span className="ml-2 px-2 py-1 bg-red-600 text-white text-xs rounded-full animate-pulse">
-                              LIVE
-                            </span>
-                          )}
+                          <span className={`text-sm ${standing.isLive ? 'text-green-400' : ''}`}>{standing.team.name}</span>
                         </Link>
                       </td>
-                      <td className="px-4 py-3 text-center">{standing.played}</td>
-                      <td className="px-4 py-3 text-center">{standing.won}</td>
-                      <td className="px-4 py-3 text-center">{standing.drawn}</td>
-                      <td className="px-4 py-3 text-center">{standing.lost}</td>
-                      <td className="px-4 py-3 text-center">{standing.goalsFor}</td>
-                      <td className="px-4 py-3 text-center">{standing.goalsAgainst}</td>
-                      <td className="px-4 py-3 text-center">{standing.goalsFor - standing.goalsAgainst}</td>
-                      <td className="px-4 py-3 text-center font-bold">{standing.points}</td>
-                      <td className="px-4 py-3">
+                      <td className="px-3 py-2 text-center text-sm">{standing.played}</td>
+                      <td className="px-3 py-2 text-center text-sm">{standing.won}</td>
+                      <td className="px-3 py-2 text-center text-sm">{standing.drawn}</td>
+                      <td className="px-3 py-2 text-center text-sm">{standing.lost}</td>
+                      <td className="px-3 py-2 text-center text-sm">{standing.goalsFor}</td>
+                      <td className="px-3 py-2 text-center text-sm">{standing.goalsAgainst}</td>
+                      <td className="px-3 py-2 text-center text-sm">{standing.goalsFor - standing.goalsAgainst}</td>
+                      <td className="px-3 py-2 text-center text-sm font-bold">{standing.points}</td>
+                      <td className="px-3 py-2">
                         <div className="flex justify-center space-x-1">
                           {standing.form.map((result, index) => (
                             <span 
                               key={index} 
-                              className={`w-5 h-5 flex items-center justify-center text-xs rounded-full
+                              className={`w-4 h-4 flex items-center justify-center text-xs rounded-full
                                 ${result === 'W' ? 'bg-green-600' : 
                                   result === 'D' ? 'bg-yellow-600' : 'bg-red-600'}`}
                             >

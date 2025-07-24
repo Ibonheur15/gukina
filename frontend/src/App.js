@@ -9,7 +9,7 @@ const HomePage = lazy(() => import('./pages/HomePage'));
 const FixturesPage = lazy(() => import('./pages/FixturesPage'));
 const LeagueTablePage = lazy(() => import('./pages/LeagueTablePage'));
 const TeamPage = lazy(() => import('./pages/TeamPage'));
-const MatchPage = lazy(() => import('./pages/MatchPage'));
+const SingleMatchPage = lazy(() => import('./pages/SingleMatchPage'));
 const SearchPage = lazy(() => import('./pages/SearchPage'));
 const NewsPage = lazy(() => import('./pages/NewsPage'));
 const SingleNewsPage = lazy(() => import('./pages/SingleNewsPage'));
@@ -102,7 +102,7 @@ function App() {
           } />
           <Route path="match/:matchId" element={
             <Suspense fallback={<LoadingSpinner />}>
-              <MatchPage />
+              <SingleMatchPage />
             </Suspense>
           } />
           <Route path="search" element={

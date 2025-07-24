@@ -1,8 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
+import useLiveMinute from '../hooks/useLiveMinute';
+import '../styles/live-match.css';
 
 const MatchCard = ({ match, highlightTeam }) => {
+  const liveMinute = useLiveMinute(match);
+  
   // Check if match has required data
   if (!match || !match.homeTeam || !match.awayTeam) {
     return (
@@ -16,7 +20,7 @@ const MatchCard = ({ match, highlightTeam }) => {
       case 'live':
         return (
           <span className="live-badge">
-            {match.currentMinute ? `${match.currentMinute}'` : 'LIVE'}
+            {liveMinute}'  
           </span>
         );
       case 'halftime':
@@ -35,23 +39,23 @@ const MatchCard = ({ match, highlightTeam }) => {
   };
 
   return (
-    <div className={`match-card block bg-dark-200 p-3 rounded-md hover:bg-dark-300 ${highlightTeam ? 'transition-all duration-200' : ''}`}>
+    <Link to={`/match/${match._id}`} className={`match-card block bg-dark-200 p-2 rounded-md hover:bg-dark-300 ${highlightTeam ? 'transition-all duration-200' : ''}`}>
       <div className="flex items-center">
-        <div className="w-16 text-center">
+        <div className="w-12 text-center text-sm">
           {getStatusDisplay()}
         </div>
         
         <div className="flex-1">
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center justify-between mb-1">
             <div className="flex items-center">
-              <div className="w-8 h-8 bg-dark-300 rounded-full flex items-center justify-center mr-2 overflow-hidden">
+              <div className="w-6 h-6 bg-dark-300 rounded-full flex items-center justify-center mr-2 overflow-hidden">
                 {match.homeTeam.logo ? (
                   <img src={match.homeTeam.logo} alt={match.homeTeam.name} className="w-full h-full object-cover" />
                 ) : (
                   <span className="text-xs">{match.homeTeam.shortName ? match.homeTeam.shortName.substring(0, 2) : match.homeTeam.name.substring(0, 2)}</span>
                 )}
               </div>
-              <span className={`font-medium ${highlightTeam === match.homeTeam._id ? 'text-primary' : ''}`}>
+              <span className={`text-sm font-medium ${highlightTeam === match.homeTeam._id ? 'text-primary' : ''}`}>
                 {match.homeTeam.name}
               </span>
             </div>
@@ -63,14 +67,14 @@ const MatchCard = ({ match, highlightTeam }) => {
           
           <div className="flex items-center justify-between">
             <div className="flex items-center">
-              <div className="w-8 h-8 bg-dark-300 rounded-full flex items-center justify-center mr-2 overflow-hidden">
+              <div className="w-6 h-6 bg-dark-300 rounded-full flex items-center justify-center mr-2 overflow-hidden">
                 {match.awayTeam.logo ? (
                   <img src={match.awayTeam.logo} alt={match.awayTeam.name} className="w-full h-full object-cover" />
                 ) : (
                   <span className="text-xs">{match.awayTeam.shortName ? match.awayTeam.shortName.substring(0, 2) : match.awayTeam.name.substring(0, 2)}</span>
                 )}
               </div>
-              <span className={`font-medium ${highlightTeam === match.awayTeam._id ? 'text-primary' : ''}`}>
+              <span className={`text-sm font-medium ${highlightTeam === match.awayTeam._id ? 'text-primary' : ''}`}>
                 {match.awayTeam.name}
               </span>
             </div>
@@ -89,7 +93,7 @@ const MatchCard = ({ match, highlightTeam }) => {
           </button>
         </div>
       </div>
-    </div>
+    </Link>
   );
 };
 

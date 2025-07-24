@@ -64,6 +64,12 @@ const matchSchema = new mongoose.Schema(
       type: Number,
       default: 0
     },
+    liveStartTime: {
+      type: Date
+    },
+    halfTimeStartTime: {
+      type: Date
+    },
     homeScore: {
       type: Number,
       default: 0

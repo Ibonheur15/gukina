@@ -20,10 +20,10 @@ const Layout = () => {
       {/* Top Navigation - Fixed */}
       <header className="bg-dark-200 shadow-md fixed top-0 left-0 right-0 z-50">
         <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center h-16">
+          <div className="flex justify-between items-center h-12">
             {/* Logo */}
             <Link to="/" className="flex items-center">
-              <span className="text-2xl font-bold text-primary">Gukina</span>
+              <span className="text-xl font-bold text-primary">Gukina</span>
             </Link>
 
             {/* Main Nav */}
@@ -60,6 +60,16 @@ const Layout = () => {
               </NavLink>
             </nav>
 
+            {/* Mobile News Icon */}
+            <div className="md:hidden">
+              <NavLink to="/news" className="flex items-center p-2 space-x-1">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+                </svg>
+                <span className="text-sm">News</span>
+              </NavLink>
+            </div>
+
             {/* Auth Links */}
             <div className="hidden md:flex items-center space-x-4">
               {isAuthenticated ? (
@@ -82,7 +92,7 @@ const Layout = () => {
 
             {/* Mobile menu button */}
             <button
-              className="md:hidden"
+              className="md:hidden ml-2"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
               {mobileMenuOpen ? (
@@ -137,8 +147,14 @@ const Layout = () => {
             </div>
           )}
 
-          {/* Sports Selector */}
-          <div className="overflow-x-auto py-2">
+
+        </div>
+      </header>
+
+      {/* Sports Filter Section */}
+      <div className="bg-dark-200 border-t border-dark-300 mt-12">
+        <div className="container mx-auto px-4">
+          <div className="overflow-x-auto py-3">
             <div className="flex space-x-4">
               {sports.map((sport) => (
                 <button
@@ -161,10 +177,7 @@ const Layout = () => {
             </div>
           </div>
         </div>
-      </header>
-
-      {/* Spacer to prevent content from being hidden under fixed header */}
-      <div className="h-32"></div>
+      </div>
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-6">
