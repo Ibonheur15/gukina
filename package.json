@@ -19,6 +19,8 @@
     "install:backend": "cd backend && npm install"
   },
   "dependencies": {
+    "express-rate-limit": "^8.0.1",
+    "helmet": "^8.1.0",
     "mongodb": "^6.17.0"
   },
   "devDependencies": {

@@ -17,7 +17,7 @@
     "fix-all": "node fix-all.js",
     "recalculate-standings": "node recalculate-standings.js",
     "clean-standings": "node clean-standings.js",
-    "fix-standings": "node fix-standings.js",
+    "fix-standings": "node direct-standings-fix.js",
     "seed-news": "node seed-news.js",
     "migrate-team-leagues": "node migrate-team-leagues.js",
     "seed-standings": "node seed-standings.js",
@@ -34,7 +34,6 @@
     "insert-standings": "node insert-standings.js",
     "debug-standings": "node debug-standings.js",
     "force-standings": "node force-create-standings.js",
-    "fix-standings": "node direct-standings-fix.js",
     "check-teams": "node check-team-leagues.js",
     "check-api": "node check-api.js",
     "test-league": "node scripts/test-league-endpoint.js",
@@ -50,11 +49,14 @@
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
+    "express-rate-limit": "^7.1.5",
+    "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.0",
     "mongoose": "^7.0.3",
-    "morgan": "^1.10.0"
+    "morgan": "^1.10.0",
+    "react-scripts": "0.0.0"
   },
   "devDependencies": {
-    "nodemon": "^2.0.22"
+    "nodemon": "^3.1.10"
   }
 }
