@@ -275,15 +275,15 @@ exports.updateMatch = async (req, res) => {
       .populate('awayTeam', 'name shortName logo')
       .populate('league', 'name');
     
-    // If match is now ended but wasn't before, update standings
+    // If match is now ended but wasn't before, finalize live standings
     if (updatedMatch.status === 'ended' && match.status !== 'ended') {
-      // Import standings service
-      const standingsService = require('../services/standingsService');
+      // Import live standings service to finalize
+      const liveStandingsService = require('../services/liveStandingsService');
       
-      // Update standings based on match result
-      const standingsResult = await standingsService.updateStandingsFromMatch(updatedMatch);
+      // Finalize the live standings
+      const standingsResult = await liveStandingsService.finalizeMatchStandings(updatedMatch._id);
       
-      console.log('Standings updated for updated match:', standingsResult.success ? 'Success' : 'Failed');
+      console.log('Live standings finalized for updated match:', standingsResult.success ? 'Success' : 'Failed');
     }
     
     res.status(200).json(updatedMatch);
@@ -475,9 +475,14 @@ exports.updateMatchStatus = async (req, res) => {
     
     if (status === 'live') {
       if (match.status === 'not_started') {
-        // Starting first half
+        // Starting first half - give both teams 1 point initially
         updateData.liveStartTime = now;
         updateData.currentMinute = 0;
+        
+        // Initialize basePoints and give initial 1 point to each team when match starts
+        const liveStandingsService = require('../services/liveStandingsService');
+        await liveStandingsService.initializeMatchStandings(match._id);
+        await liveStandingsService.updateLiveStandings(match._id, { type: 'match_start' });
       } else if (match.status === 'halftime') {
         // Starting second half
         updateData.halfTimeStartTime = now;
@@ -501,15 +506,15 @@ exports.updateMatchStatus = async (req, res) => {
       .populate('awayTeam', 'name shortName logo')
       .populate('league', 'name');
     
-    // If match is now ended, update standings
+    // If match is now ended, finalize live standings
     if (status === 'ended' && match.status !== 'ended') {
-      // Import standings service
-      const standingsService = require('../services/standingsService');
+      // Import live standings service to finalize
+      const liveStandingsService = require('../services/liveStandingsService');
       
-      // Update standings based on match result
-      const standingsResult = await standingsService.updateStandingsFromMatch(updatedMatch);
+      // Finalize the live standings
+      const standingsResult = await liveStandingsService.finalizeMatchStandings(updatedMatch._id);
       
-      console.log('Standings updated:', standingsResult.success ? 'Success' : 'Failed');
+      console.log('Live standings finalized:', standingsResult.success ? 'Success' : 'Failed');
     }
     
     res.status(200).json(updatedMatch);

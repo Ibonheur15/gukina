@@ -11,6 +11,7 @@ const AdminLeagueStandings = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [season, setSeason] = useState(new Date().getFullYear().toString());
+  const [availableSeasons, setAvailableSeasons] = useState([]);
   const [editingStanding, setEditingStanding] = useState(null);
   const [formData, setFormData] = useState({
     position: 0,
@@ -33,6 +34,14 @@ const AdminLeagueStandings = () => {
         const leagueRes = await leagueService.getById(leagueId);
         setLeague(leagueRes.data.league);
         setTeams(leagueRes.data.teams || []);
+        
+        // Fetch available seasons
+        try {
+          const seasonsRes = await standingService.getAvailableSeasons(leagueId);
+          setAvailableSeasons(seasonsRes.data || []);
+        } catch (err) {
+          console.log('No seasons available yet');
+        }
         
         // Fetch standings
         try {
@@ -152,23 +161,61 @@ const AdminLeagueStandings = () => {
       </div>
       
       {/* Season Selector */}
-      <div className="mb-6">
-        <label className="block text-sm font-medium mb-1">Season</label>
-        <select
-          value={season}
-          onChange={handleSeasonChange}
-          className="bg-dark-300 border border-dark-400 rounded-md px-3 py-2"
+      <div className="mb-6 flex items-end space-x-4">
+        <div>
+          <label className="block text-sm font-medium mb-1">Season</label>
+          <select
+            value={season}
+            onChange={handleSeasonChange}
+            className="bg-dark-300 border border-dark-400 rounded-md px-3 py-2"
+          >
+            {/* Show available seasons */}
+            {availableSeasons.length > 0 ? (
+              availableSeasons.map(seasonYear => (
+                <option key={seasonYear} value={seasonYear}>
+                  {seasonYear}/{(parseInt(seasonYear) + 1).toString().slice(-2)}
+                </option>
+              ))
+            ) : (
+              Array.from({ length: 6 }, (_, i) => {
+                const year = new Date().getFullYear() - i;
+                return (
+                  <option key={year} value={year.toString()}>
+                    {year}/{(year + 1).toString().slice(-2)}
+                  </option>
+                );
+              })
+            )}
+          </select>
+        </div>
+        <button
+          onClick={async () => {
+            try {
+              console.log('Creating new season for league:', leagueId);
+              const response = await standingService.createNewSeason(leagueId);
+              console.log('New season created:', response.data);
+              
+              const newSeason = response.data.season;
+              setSeason(newSeason);
+              
+              // Refresh standings data for new season
+              const standingsRes = await standingService.getByLeague(leagueId, newSeason);
+              setStandings(standingsRes.data || []);
+              
+              // Refresh available seasons
+              const seasonsRes = await standingService.getAvailableSeasons(leagueId);
+              setAvailableSeasons(seasonsRes.data || []);
+              
+              setError(null);
+            } catch (err) {
+              console.error('Error creating new season:', err);
+              setError(`Failed to create new season: ${err.response?.data?.message || err.message}`);
+            }
+          }}
+          className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
         >
-          {/* Generate options for current year and 5 years back */}
-          {Array.from({ length: 6 }, (_, i) => {
-            const year = new Date().getFullYear() - i;
-            return (
-              <option key={year} value={year.toString()}>
-                {year}/{(year + 1).toString().slice(-2)}
-              </option>
-            );
-          })}
-        </select>
+          New Season
+        </button>
       </div>
       
       {/* Add New Standing Button */}

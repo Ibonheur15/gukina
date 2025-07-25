@@ -273,6 +273,83 @@ exports.updateStandingsFromMatch = async (req, res) => {
   }
 };
 
+// Create new season
+exports.createNewSeason = async (req, res) => {
+  console.log('createNewSeason function called');
+  console.log('Request params:', req.params);
+  
+  try {
+    const { leagueId, season } = req.params;
+    
+    if (!leagueId || !season) {
+      return res.status(400).json({ message: 'League ID and season are required' });
+    }
+    
+    console.log('Creating new season:', season, 'for league:', leagueId);
+    
+    // Check if season already exists
+    const existingStandings = await LeagueStanding.find({ league: leagueId, season });
+    if (existingStandings.length > 0) {
+      return res.status(400).json({ message: 'Season already exists for this league' });
+    }
+    
+    // Get all teams in this league
+    const teams = await Team.find({ 
+      $or: [
+        { league: leagueId },
+        { leagues: leagueId },
+        { leagues: { $in: [leagueId] } }
+      ]
+    });
+    
+    console.log('Found teams:', teams.length);
+    
+    if (teams.length === 0) {
+      console.log('No teams found for league:', leagueId);
+      return res.status(201).json({
+        message: 'New season created successfully (no teams found)',
+        season,
+        teamsCount: 0
+      });
+    }
+    
+    // Create initial standings for all teams
+    const standings = teams.map((team, index) => ({
+      league: leagueId,
+      season,
+      team: team._id,
+      position: index + 1,
+      played: 0,
+      won: 0,
+      drawn: 0,
+      lost: 0,
+      goalsFor: 0,
+      goalsAgainst: 0,
+      points: 0,
+      basePoints: 0,
+      tempPoints: 0,
+      form: []
+    }));
+    
+    await LeagueStanding.insertMany(standings);
+    
+    console.log('Created standings for', standings.length, 'teams');
+    
+    res.status(201).json({
+      message: 'New season created successfully',
+      season,
+      teamsCount: teams.length
+    });
+  } catch (error) {
+    console.error('Detailed error creating new season:', error);
+    console.error('Error stack:', error.stack);
+    res.status(500).json({ 
+      message: error.message || 'Internal server error',
+      error: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+  }
+};
+
 // Helper function to recalculate positions
 async function recalculateLeaguePositions(leagueId, season) {
   try {

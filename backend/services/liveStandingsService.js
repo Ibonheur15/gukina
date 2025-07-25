@@ -2,6 +2,47 @@ const LeagueStanding = require('../models/LeagueStanding');
 const Match = require('../models/Match');
 
 /**
+ * Initialize standings before match starts
+ * @param {String} matchId - The match ID
+ */
+exports.initializeMatchStandings = async (matchId) => {
+  try {
+    const match = await Match.findById(matchId).populate('homeTeam awayTeam league');
+    if (!match) {
+      throw new Error('Match not found');
+    }
+
+    const { league, season, homeTeam, awayTeam } = match;
+
+    // Get current standings for both teams
+    const [homeStanding, awayStanding] = await Promise.all([
+      LeagueStanding.findOne({ league: league._id, team: homeTeam._id, season }),
+      LeagueStanding.findOne({ league: league._id, team: awayTeam._id, season })
+    ]);
+
+    if (homeStanding && awayStanding) {
+      // Set basePoints to current points (excluding any temp points)
+      homeStanding.basePoints = homeStanding.points - (homeStanding.tempPoints || 0);
+      awayStanding.basePoints = awayStanding.points - (awayStanding.tempPoints || 0);
+      
+      // Reset temp points
+      homeStanding.tempPoints = 0;
+      awayStanding.tempPoints = 0;
+      
+      await Promise.all([
+        homeStanding.save(),
+        awayStanding.save()
+      ]);
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error initializing match standings:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
  * Update standings in real-time when match events occur
  * @param {String} matchId - The match ID
  * @param {Object} eventData - The event data (goal, card, etc.)
@@ -14,8 +55,8 @@ exports.updateLiveStandings = async (matchId, eventData) => {
       throw new Error('Match not found');
     }
 
-    // Only update for live matches
-    if (!['live', 'halftime'].includes(match.status)) {
+    // Handle match start or live matches
+    if (!['live', 'halftime'].includes(match.status) && eventData.type !== 'match_start') {
       return { success: false, message: 'Match is not live' };
     }
 
@@ -46,27 +87,32 @@ exports.updateLiveStandings = async (matchId, eventData) => {
     awayStanding.tempGoalsFor = awayGoalsInMatch;
     awayStanding.tempGoalsAgainst = homeGoalsInMatch;
 
-    // Calculate potential points (if match ended now)
-    let homeTempPoints = homeStanding.points - (homeStanding.tempPoints || 0);
-    let awayTempPoints = awayStanding.points - (awayStanding.tempPoints || 0);
+    // Initialize basePoints if not set (first time) - this should be the points before this match
+    if (homeStanding.basePoints === undefined || homeStanding.basePoints === null) {
+      homeStanding.basePoints = homeStanding.points - (homeStanding.tempPoints || 0);
+    }
+    if (awayStanding.basePoints === undefined || awayStanding.basePoints === null) {
+      awayStanding.basePoints = awayStanding.points - (awayStanding.tempPoints || 0);
+    }
 
+    // Determine temp points for this live match only
     if (homeGoalsInMatch > awayGoalsInMatch) {
-      // Home team winning
-      homeTempPoints += 3;
+      // Home team leading - gets 3 points for this match, away gets 0
       homeStanding.tempPoints = 3;
       awayStanding.tempPoints = 0;
     } else if (homeGoalsInMatch < awayGoalsInMatch) {
-      // Away team winning
-      awayTempPoints += 3;
+      // Away team leading - gets 3 points for this match, home gets 0  
       homeStanding.tempPoints = 0;
       awayStanding.tempPoints = 3;
     } else {
-      // Draw
-      homeTempPoints += 1;
-      awayTempPoints += 1;
+      // Draw (including 0-0) - each team gets 1 point for this match
       homeStanding.tempPoints = 1;
       awayStanding.tempPoints = 1;
     }
+
+    // Final points = base points + temp points for this match
+    const homeTempPoints = homeStanding.basePoints + homeStanding.tempPoints;
+    const awayTempPoints = awayStanding.basePoints + awayStanding.tempPoints;
 
     homeStanding.points = homeTempPoints;
     awayStanding.points = awayTempPoints;
@@ -150,16 +196,25 @@ exports.finalizeMatchStandings = async (matchId) => {
     ]);
 
     if (homeStanding && awayStanding) {
+      // Finalize points: keep the current total (basePoints + tempPoints)
+      const finalHomePoints = (homeStanding.basePoints || 0) + (homeStanding.tempPoints || 0);
+      const finalAwayPoints = (awayStanding.basePoints || 0) + (awayStanding.tempPoints || 0);
+      
+      homeStanding.points = finalHomePoints;
+      awayStanding.points = finalAwayPoints;
+      homeStanding.basePoints = finalHomePoints;
+      awayStanding.basePoints = finalAwayPoints;
+      
       // Clear temporary fields and mark as finalized
       homeStanding.tempGoalsFor = undefined;
       homeStanding.tempGoalsAgainst = undefined;
-      homeStanding.tempPoints = undefined;
+      homeStanding.tempPoints = 0;
       homeStanding.isLiveUpdate = false;
       homeStanding.played += 1;
 
       awayStanding.tempGoalsFor = undefined;
       awayStanding.tempGoalsAgainst = undefined;
-      awayStanding.tempPoints = undefined;
+      awayStanding.tempPoints = 0;
       awayStanding.isLiveUpdate = false;
       awayStanding.played += 1;
 

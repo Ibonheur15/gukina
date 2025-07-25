@@ -73,11 +73,10 @@ exports.updateStandingsFromMatch = async (match) => {
     awayStanding.goalsFor += awayScore;
     awayStanding.goalsAgainst += homeScore;
 
-    // Update wins, draws, losses and points
+    // Update wins, draws, losses only (points handled by live system)
     if (homeScore > awayScore) {
       // Home team won
       homeStanding.won += 1;
-      homeStanding.points += 3;
       homeStanding.form.unshift('W');
 
       awayStanding.lost += 1;
@@ -85,7 +84,6 @@ exports.updateStandingsFromMatch = async (match) => {
     } else if (homeScore < awayScore) {
       // Away team won
       awayStanding.won += 1;
-      awayStanding.points += 3;
       awayStanding.form.unshift('W');
 
       homeStanding.lost += 1;
@@ -93,11 +91,9 @@ exports.updateStandingsFromMatch = async (match) => {
     } else {
       // Draw
       homeStanding.drawn += 1;
-      homeStanding.points += 1;
       homeStanding.form.unshift('D');
 
       awayStanding.drawn += 1;
-      awayStanding.points += 1;
       awayStanding.form.unshift('D');
     }
 
@@ -188,25 +184,27 @@ exports.recalculateStandings = async (leagueId, season) => {
       standingsMap[awayTeamId].goalsFor += match.awayScore;
       standingsMap[awayTeamId].goalsAgainst += match.homeScore;
 
-      // Update wins, draws, losses and points
+      // Update wins, draws, losses and points (correct point system)
       if (match.homeScore > match.awayScore) {
-        // Home team won
+        // Home team won - gets 3 points total for this match, away gets 0
         standingsMap[homeTeamId].won += 1;
         standingsMap[homeTeamId].points += 3;
         standingsMap[homeTeamId].form.unshift('W');
 
         standingsMap[awayTeamId].lost += 1;
         standingsMap[awayTeamId].form.unshift('L');
+        // Away team gets 0 points total for this match
       } else if (match.homeScore < match.awayScore) {
-        // Away team won
+        // Away team won - gets 3 points total for this match, home gets 0
         standingsMap[awayTeamId].won += 1;
         standingsMap[awayTeamId].points += 3;
         standingsMap[awayTeamId].form.unshift('W');
 
         standingsMap[homeTeamId].lost += 1;
         standingsMap[homeTeamId].form.unshift('L');
+        // Home team gets 0 points total for this match
       } else {
-        // Draw
+        // Draw - each team gets 1 point total for this match
         standingsMap[homeTeamId].drawn += 1;
         standingsMap[homeTeamId].points += 1;
         standingsMap[homeTeamId].form.unshift('D');

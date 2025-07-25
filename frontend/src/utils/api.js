@@ -144,6 +144,14 @@ export const standingService = {
     api.put(`/league-standings/league/${leagueId}/team/${teamId}`, data),
   updateFromMatch: (matchId, data) => 
     api.post(`/league-standings/match/${matchId}`, data),
+  createNewSeason: (leagueId) => {
+    console.log('API call: createNewSeason', leagueId);
+    return api.post(`/league-standings/league/${leagueId}/create-season`);
+  },
+  
+  getAvailableSeasons: (leagueId) => {
+    return api.get(`/league-standings/league/${leagueId}/seasons`);
+  },
 };
 
 export const teamService = {
