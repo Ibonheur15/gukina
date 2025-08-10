@@ -48,14 +48,18 @@ exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
     
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email and password are required' });
+    }
+    
     // Find user
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
     
-    // Check if user is active
-    if (!user.active) {
+    // Check if user is active (only if active field exists)
+    if (user.active !== undefined && !user.active) {
       return res.status(401).json({ message: 'Account is deactivated' });
     }
     
@@ -82,7 +86,8 @@ exports.login = async (req, res) => {
       }
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Login error:', error);
+    res.status(500).json({ message: 'Internal server error during login' });
   }
 };
 
