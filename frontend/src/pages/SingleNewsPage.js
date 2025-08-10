@@ -102,11 +102,10 @@ const SingleNewsPage = () => {
       )}
       
       {/* Content */}
-      <div className="prose prose-invert max-w-none">
-        {news.content.split('\n').map((paragraph, index) => (
-          paragraph ? <p key={index} className="mb-4">{paragraph}</p> : <br key={index} />
-        ))}
-      </div>
+      <div 
+        className="prose prose-invert max-w-none"
+        dangerouslySetInnerHTML={{ __html: news.content }}
+      />
     </div>
   );
 };

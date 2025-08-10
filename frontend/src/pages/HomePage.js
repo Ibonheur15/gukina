@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { format } from 'date-fns';
+import { format, addDays, subDays } from 'date-fns';
 import { Link } from 'react-router-dom';
 import MatchCard from '../components/MatchCard';
 import { matchService, leagueService } from '../utils/api';
@@ -11,6 +11,7 @@ const HomePage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeDate, setActiveDate] = useState('today');
+  const [currentDate, setCurrentDate] = useState(new Date());
 
   useEffect(() => {
     const fetchData = async () => {
@@ -99,6 +100,18 @@ const HomePage = () => {
   const handleDateChange = async (date) => {
     setActiveDate(date);
     setLoading(true);
+    
+    // Update the displayed date
+    const today = new Date();
+    let newDate;
+    if (date === 'yesterday') {
+      newDate = subDays(today, 1);
+    } else if (date === 'tomorrow') {
+      newDate = addDays(today, 1);
+    } else {
+      newDate = today;
+    }
+    setCurrentDate(newDate);
     
     try {
       // Fetch matches for the selected date
@@ -203,7 +216,7 @@ const HomePage = () => {
       {/* Today's Matches Section */}
       <div>
         <h2 className="text-xl font-bold mb-4">
-          {format(new Date(), 'EEEE, MMMM d')}
+          {format(currentDate, 'EEEE, MMMM d')}
         </h2>
         
         {todayMatchesByLeague.length > 0 ? (

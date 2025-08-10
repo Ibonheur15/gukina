@@ -216,6 +216,34 @@ const AdminLeagueStandings = () => {
         >
           New Season
         </button>
+        <button
+          onClick={async () => {
+            if (window.confirm(`Are you sure you want to delete season ${season}? This action cannot be undone.`)) {
+              try {
+                await standingService.deleteSeason(leagueId, season);
+                
+                // Refresh available seasons
+                const seasonsRes = await standingService.getAvailableSeasons(leagueId);
+                setAvailableSeasons(seasonsRes.data || []);
+                
+                // Switch to latest available season or current year
+                const latestSeason = seasonsRes.data[0] || new Date().getFullYear().toString();
+                setSeason(latestSeason);
+                
+                // Refresh standings
+                const standingsRes = await standingService.getByLeague(leagueId, latestSeason);
+                setStandings(standingsRes.data || []);
+                
+                setError(null);
+              } catch (err) {
+                setError(`Failed to delete season: ${err.response?.data?.message || err.message}`);
+              }
+            }
+          }}
+          className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+        >
+          Delete Season
+        </button>
       </div>
       
       {/* Add New Standing Button */}

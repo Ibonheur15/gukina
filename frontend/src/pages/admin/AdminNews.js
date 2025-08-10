@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
+import '../../styles/quill-custom.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
@@ -20,6 +23,21 @@ const AdminNews = () => {
   const [currentId, setCurrentId] = useState(null);
 
   const categories = ['Football', 'Basketball', 'Tennis', 'Cricket', 'Hockey', 'General'];
+
+  const quillModules = {
+    toolbar: [
+      [{ 'header': [1, 2, 3, false] }],
+      ['bold', 'italic', 'underline', 'strike'],
+      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+      ['link', 'image'],
+      ['clean']
+    ],
+  };
+
+  const quillFormats = [
+    'header', 'bold', 'italic', 'underline', 'strike',
+    'list', 'bullet', 'link', 'image'
+  ];
 
   useEffect(() => {
     fetchNews();
@@ -49,6 +67,13 @@ const AdminNews = () => {
     setFormData({
       ...formData,
       [name]: type === 'checkbox' ? checked : value
+    });
+  };
+
+  const handleContentChange = (content) => {
+    setFormData({
+      ...formData,
+      content: content
     });
   };
 
@@ -161,14 +186,16 @@ const AdminNews = () => {
           
           <div className="mb-4">
             <label className="block text-sm font-medium mb-1">Content</label>
-            <textarea
-              name="content"
-              value={formData.content}
-              onChange={handleChange}
-              rows="6"
-              className="w-full bg-dark-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
-              required
-            ></textarea>
+            <div className="quill-wrapper">
+              <ReactQuill
+                theme="snow"
+                value={formData.content}
+                onChange={handleContentChange}
+                modules={quillModules}
+                formats={quillFormats}
+                style={{ height: '200px', marginBottom: '50px' }}
+              />
+            </div>
           </div>
           
           <div className="mb-4">

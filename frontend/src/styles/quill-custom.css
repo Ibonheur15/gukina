@@ -1,0 +1,55 @@
+/* Custom styles for Quill editor to match other text boxes */
+.ql-editor {
+  color: #ffffff !important;
+  background-color: #374151 !important;
+  border: none !important;
+  padding: 8px 16px !important;
+  font-size: 14px !important;
+}
+
+.ql-toolbar {
+  border: none !important;
+  background-color: #374151 !important;
+  border-radius: 6px 6px 0 0 !important;
+  padding: 8px 12px !important;
+}
+
+.ql-container {
+  border: none !important;
+  background-color: #374151 !important;
+  border-radius: 0 0 6px 6px !important;
+}
+
+.quill-wrapper {
+  background-color: #374151;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  transition: all 0.2s;
+}
+
+.quill-wrapper:focus-within {
+  outline: 2px solid #00c851;
+  outline-offset: 2px;
+}
+
+.ql-toolbar .ql-stroke {
+  fill: none;
+  stroke: #ffffff !important;
+}
+
+.ql-toolbar .ql-fill {
+  fill: #ffffff !important;
+  stroke: none;
+}
+
+.ql-toolbar .ql-picker-label {
+  color: #ffffff !important;
+}
+
+.ql-toolbar button:hover {
+  background-color: #4b5563 !important;
+}
+
+.ql-toolbar button.ql-active {
+  background-color: #00c851 !important;
+}

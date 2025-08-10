@@ -152,6 +152,10 @@ export const standingService = {
   getAvailableSeasons: (leagueId) => {
     return api.get(`/league-standings/league/${leagueId}/seasons`);
   },
+  
+  deleteSeason: (leagueId, season) => {
+    return api.delete(`/league-standings/league/${leagueId}/season/${season}`);
+  },
 };
 
 export const teamService = {

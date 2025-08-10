@@ -34,6 +34,27 @@ router.get('/league/:leagueId/seasons', async (req, res) => {
   }
 });
 
+// Delete season
+router.delete('/league/:leagueId/season/:season', 
+  protect, 
+  admin, 
+  async (req, res) => {
+    try {
+      const { leagueId, season } = req.params;
+      const LeagueStanding = require('../models/LeagueStanding');
+      
+      const result = await LeagueStanding.deleteMany({ league: leagueId, season });
+      
+      res.json({
+        message: `Season ${season} deleted successfully`,
+        deletedCount: result.deletedCount
+      });
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  }
+);
+
 // Create new season - auto-determine next season
 router.post('/league/:leagueId/create-season', 
   protect, 

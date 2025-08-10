@@ -101,9 +101,12 @@ const NewsPage = () => {
                 <div className="p-4">
                   <span className="text-xs text-primary">{item.category}</span>
                   <h3 className="text-lg font-semibold mt-1 mb-2">{item.title}</h3>
-                  <p className="text-gray-400 text-sm mb-3">
-                    {item.content.substring(0, 100)}...
-                  </p>
+                  <div 
+                    className="text-gray-400 text-sm mb-3 line-clamp-3"
+                    dangerouslySetInnerHTML={{ 
+                      __html: item.content.replace(/<[^>]*>/g, '').substring(0, 100) + '...' 
+                    }}
+                  />
                   <div className="flex justify-between items-center text-xs text-gray-500">
                     <span>By {item.author?.name || 'Admin'}</span>
                     <span>{formatDate(item.createdAt)}</span>
@@ -151,9 +154,12 @@ const NewsPage = () => {
               <div className="p-4">
                 <span className="text-xs text-primary">{item.category}</span>
                 <h3 className="text-lg font-semibold mt-1 mb-2">{item.title}</h3>
-                <p className="text-gray-400 text-sm mb-3">
-                  {item.content.substring(0, 100)}...
-                </p>
+                <div 
+                  className="text-gray-400 text-sm mb-3 line-clamp-3"
+                  dangerouslySetInnerHTML={{ 
+                    __html: item.content.replace(/<[^>]*>/g, '').substring(0, 100) + '...' 
+                  }}
+                />
                 <div className="flex justify-between items-center text-xs text-gray-500">
                   <span>By {item.author?.name || 'Admin'}</span>
                   <span>{formatDate(item.createdAt)}</span>
