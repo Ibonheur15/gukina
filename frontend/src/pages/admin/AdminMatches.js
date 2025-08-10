@@ -27,13 +27,7 @@ const AdminMatches = () => {
     homeScore: 0,
     awayScore: 0,
     season: new Date().getFullYear().toString(),
-    round: '',
-    isStandalone: false
-  });
-  const [standaloneData, setStandaloneData] = useState({
-    homeTeamName: '',
-    awayTeamName: '',
-    leagueName: ''
+    round: ''
   });
   const [availableSeasons, setAvailableSeasons] = useState([]);
   const [selectedSeasonFilter, setSelectedSeasonFilter] = useState('');
@@ -137,25 +131,13 @@ const AdminMatches = () => {
     }
   };
 
-  const handleStandaloneChange = (e) => {
-    const { name, value } = e.target;
-    setStandaloneData({
-      ...standaloneData,
-      [name]: value
-    });
-  };
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Check if home team and away team are the same for regular matches
-    if (!formData.isStandalone && formData.homeTeam === formData.awayTeam) {
-      setError('Home team and away team cannot be the same');
-      return;
-    }
-    
-    // Check if standalone team names are the same
-    if (formData.isStandalone && standaloneData.homeTeamName === standaloneData.awayTeamName) {
+    // Check if home team and away team are the same
+    if (formData.homeTeam === formData.awayTeam) {
       setError('Home team and away team cannot be the same');
       return;
     }
@@ -175,11 +157,6 @@ const AdminMatches = () => {
         ...formData,
         matchDate: dateTime.toISOString(),
       };
-      
-      // Add standalone data if it's a standalone match
-      if (formData.isStandalone) {
-        matchData.standaloneData = standaloneData;
-      }
       
       // Remove matchTime as it's not in the model
       delete matchData.matchTime;
@@ -212,17 +189,8 @@ const AdminMatches = () => {
       homeScore: match.homeScore,
       awayScore: match.awayScore,
       season: match.season,
-      round: match.round || '',
-      isStandalone: match.isStandalone || false
+      round: match.round || ''
     });
-    
-    if (match.isStandalone && match.standaloneData) {
-      setStandaloneData({
-        homeTeamName: match.standaloneData.homeTeamName || '',
-        awayTeamName: match.standaloneData.awayTeamName || '',
-        leagueName: match.standaloneData.leagueName || ''
-      });
-    }
     
     setEditMode(true);
     setCurrentId(match._id);
@@ -344,13 +312,7 @@ const AdminMatches = () => {
       homeScore: 0,
       awayScore: 0,
       season: new Date().getFullYear().toString(),
-      round: '',
-      isStandalone: false
-    });
-    setStandaloneData({
-      homeTeamName: '',
-      awayTeamName: '',
-      leagueName: ''
+      round: ''
     });
     setEditMode(false);
     setCurrentId(null);
@@ -403,146 +365,84 @@ const AdminMatches = () => {
         </h2>
         
         <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                name="isStandalone"
-                checked={formData.isStandalone}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">League</label>
+              <select
+                name="league"
+                value={formData.league}
                 onChange={handleChange}
-                className="mr-2"
-              />
-              <span className="text-sm font-medium">Standalone Match</span>
-              <span className="ml-2 text-xs text-gray-400">(Create match by typing everything manually - no league table)</span>
-            </label>
+                className="w-full bg-dark-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                required
+              >
+                <option value="">Select League</option>
+                {leagues.map((league) => (
+                  <option key={league._id} value={league._id}>
+                    {league.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium mb-1">Season</label>
+              <select
+                name="season"
+                value={formData.season}
+                onChange={handleChange}
+                className="w-full bg-dark-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                required
+              >
+                <option value="">Select Season</option>
+                {Array.from({ length: 6 }, (_, i) => {
+                  const year = new Date().getFullYear() - i;
+                  return (
+                    <option key={year} value={year.toString()}>
+                      {year}/{(year + 1).toString().slice(-2)}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
           </div>
           
-          {formData.isStandalone ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">League Name</label>
-                <input
-                  type="text"
-                  name="leagueName"
-                  value={standaloneData.leagueName}
-                  onChange={handleStandaloneChange}
-                  className="w-full bg-dark-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
-                  placeholder="Enter league name"
-                  required
-                />
-              </div>
-              <div></div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Home Team</label>
+              <select
+                name="homeTeam"
+                value={formData.homeTeam}
+                onChange={handleChange}
+                className="w-full bg-dark-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                required
+              >
+                <option value="">Select Home Team</option>
+                {teams.map((team) => (
+                  <option key={team._id} value={team._id}>
+                    {team.name}
+                  </option>
+                ))}
+              </select>
             </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">League</label>
-                <select
-                  name="league"
-                  value={formData.league}
-                  onChange={handleChange}
-                  className="w-full bg-dark-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
-                  required
-                >
-                  <option value="">Select League</option>
-                  {leagues.map((league) => (
-                    <option key={league._id} value={league._id}>
-                      {league.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium mb-1">Season</label>
-                <select
-                  name="season"
-                  value={formData.season}
-                  onChange={handleChange}
-                  className="w-full bg-dark-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
-                  required
-                >
-                  <option value="">Select Season</option>
-                  {Array.from({ length: 6 }, (_, i) => {
-                    const year = new Date().getFullYear() - i;
-                    return (
-                      <option key={year} value={year.toString()}>
-                        {year}/{(year + 1).toString().slice(-2)}
-                      </option>
-                    );
-                  })}
-                </select>
-              </div>
+            
+            <div>
+              <label className="block text-sm font-medium mb-1">Away Team</label>
+              <select
+                name="awayTeam"
+                value={formData.awayTeam}
+                onChange={handleChange}
+                className="w-full bg-dark-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                required
+              >
+                <option value="">Select Away Team</option>
+                {teams.map((team) => (
+                  <option key={team._id} value={team._id}>
+                    {team.name}
+                  </option>
+                ))}
+              </select>
             </div>
-          )}
-          
-          {formData.isStandalone ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Home Team Name</label>
-                <input
-                  type="text"
-                  name="homeTeamName"
-                  value={standaloneData.homeTeamName}
-                  onChange={handleStandaloneChange}
-                  className="w-full bg-dark-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
-                  placeholder="Enter home team name"
-                  required
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium mb-1">Away Team Name</label>
-                <input
-                  type="text"
-                  name="awayTeamName"
-                  value={standaloneData.awayTeamName}
-                  onChange={handleStandaloneChange}
-                  className="w-full bg-dark-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
-                  placeholder="Enter away team name"
-                  required
-                />
-              </div>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Home Team</label>
-                <select
-                  name="homeTeam"
-                  value={formData.homeTeam}
-                  onChange={handleChange}
-                  className="w-full bg-dark-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
-                  required
-                >
-                  <option value="">Select Home Team</option>
-                  {teams.map((team) => (
-                    <option key={team._id} value={team._id}>
-                      {team.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium mb-1">Away Team</label>
-                <select
-                  name="awayTeam"
-                  value={formData.awayTeam}
-                  onChange={handleChange}
-                  className="w-full bg-dark-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
-                  required
-                >
-                  <option value="">Select Away Team</option>
-                  {teams.map((team) => (
-                    <option key={team._id} value={team._id}>
-                      {team.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          )}
+          </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
@@ -676,7 +576,6 @@ const AdminMatches = () => {
                 <th className="text-left p-4">Season</th>
                 <th className="text-left p-4">Date & Time</th>
                 <th className="text-left p-4">Venue</th>
-                <th className="text-left p-4">Type</th>
                 <th className="text-left p-4">Status</th>
                 <th className="text-left p-4">Score</th>
                 <th className="text-left p-4">Actions</th>
@@ -689,50 +588,38 @@ const AdminMatches = () => {
                     <div className="flex items-center">
                       <div className="flex flex-col">
                         <div className="flex items-center">
-                          {match.isStandalone ? (
-                            <span>{match.standaloneData?.homeTeamName || 'N/A'}</span>
+                          {match.homeTeam?.logo ? (
+                            <img 
+                              src={match.homeTeam.logo} 
+                              alt={match.homeTeam.name} 
+                              className="w-5 h-5 mr-2 object-contain"
+                            />
                           ) : (
-                            <>
-                              {match.homeTeam?.logo ? (
-                                <img 
-                                  src={match.homeTeam.logo} 
-                                  alt={match.homeTeam.name} 
-                                  className="w-5 h-5 mr-2 object-contain"
-                                />
-                              ) : (
-                                <span className="w-5 h-5 mr-2 bg-dark-400 rounded-full flex items-center justify-center text-xs">
-                                  {match.homeTeam?.shortName?.substring(0, 1) || 'H'}
-                                </span>
-                              )}
-                              <span>{match.homeTeam?.name || 'N/A'}</span>
-                            </>
+                            <span className="w-5 h-5 mr-2 bg-dark-400 rounded-full flex items-center justify-center text-xs">
+                              {match.homeTeam?.shortName?.substring(0, 1) || 'H'}
+                            </span>
                           )}
+                          <span>{match.homeTeam?.name || 'N/A'}</span>
                         </div>
                         <div className="flex items-center mt-1">
-                          {match.isStandalone ? (
-                            <span>{match.standaloneData?.awayTeamName || 'N/A'}</span>
+                          {match.awayTeam?.logo ? (
+                            <img 
+                              src={match.awayTeam.logo} 
+                              alt={match.awayTeam.name} 
+                              className="w-5 h-5 mr-2 object-contain"
+                            />
                           ) : (
-                            <>
-                              {match.awayTeam?.logo ? (
-                                <img 
-                                  src={match.awayTeam.logo} 
-                                  alt={match.awayTeam.name} 
-                                  className="w-5 h-5 mr-2 object-contain"
-                                />
-                              ) : (
-                                <span className="w-5 h-5 mr-2 bg-dark-400 rounded-full flex items-center justify-center text-xs">
-                                  {match.awayTeam?.shortName?.substring(0, 1) || 'A'}
-                                </span>
-                              )}
-                              <span>{match.awayTeam?.name || 'N/A'}</span>
-                            </>
+                            <span className="w-5 h-5 mr-2 bg-dark-400 rounded-full flex items-center justify-center text-xs">
+                              {match.awayTeam?.shortName?.substring(0, 1) || 'A'}
+                            </span>
                           )}
+                          <span>{match.awayTeam?.name || 'N/A'}</span>
                         </div>
                       </div>
                     </div>
                   </td>
                   <td className="p-4">
-                    {match.isStandalone ? match.standaloneData?.leagueName || 'N/A' : match.league?.name || 'N/A'}
+                    {match.league?.name || 'N/A'}
                   </td>
                   <td className="p-4">
                     {match.season ? `${match.season}/${(parseInt(match.season) + 1).toString().slice(-2)}` : 'N/A'}
@@ -742,13 +629,6 @@ const AdminMatches = () => {
                   </td>
                   <td className="p-4">
                     {match.venue}
-                  </td>
-                  <td className="p-4">
-                    {match.isStandalone ? (
-                      <span className="px-2 py-1 bg-purple-900 bg-opacity-30 text-purple-400 text-xs rounded">Standalone</span>
-                    ) : (
-                      <span className="px-2 py-1 bg-gray-800 text-gray-400 text-xs rounded">Regular</span>
-                    )}
                   </td>
                   <td className="p-4">
                     {getStatusBadge(match.status)}
@@ -772,7 +652,7 @@ const AdminMatches = () => {
                           Events
                         </Link>
                         <button
-                          onClick={() => handleDelete(match._id, match.homeTeam.name, match.awayTeam.name)}
+                          onClick={() => handleDelete(match._id, match.homeTeam?.name || 'Unknown', match.awayTeam?.name || 'Unknown')}
                           className="text-red-500 hover:text-red-400"
                         >
                           Delete
@@ -834,7 +714,7 @@ const AdminMatches = () => {
               
               {matches.length === 0 && (
                 <tr>
-                  <td colSpan="9" className="p-4 text-center text-gray-500">
+                  <td colSpan="8" className="p-4 text-center text-gray-500">
                     No matches found
                   </td>
                 </tr>

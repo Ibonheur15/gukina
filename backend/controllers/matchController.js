@@ -212,33 +212,20 @@ exports.getMatchById = async (req, res) => {
 // Create new match
 exports.createMatch = async (req, res) => {
   try {
-    // Check if home team and away team are the same (only for regular matches)
-    if (!req.body.isStandalone && req.body.homeTeam === req.body.awayTeam) {
+    // Check if home team and away team are the same
+    if (req.body.homeTeam === req.body.awayTeam) {
       return res.status(400).json({ message: 'Home team and away team cannot be the same' });
-    }
-    
-    // For standalone matches, check team names
-    if (req.body.isStandalone && req.body.standaloneData) {
-      const { homeTeamName, awayTeamName } = req.body.standaloneData;
-      if (homeTeamName && awayTeamName && homeTeamName.trim() === awayTeamName.trim()) {
-        return res.status(400).json({ message: 'Home team and away team cannot be the same' });
-      }
     }
     
     const newMatch = new Match(req.body);
     const savedMatch = await newMatch.save();
-    let populatedMatch;
-    if (savedMatch.isStandalone) {
-      populatedMatch = savedMatch;
-    } else {
-      populatedMatch = await Match.findById(savedMatch._id)
-        .populate('homeTeam', 'name shortName logo')
-        .populate('awayTeam', 'name shortName logo')
-        .populate('league', 'name');
-    }
+    const populatedMatch = await Match.findById(savedMatch._id)
+      .populate('homeTeam', 'name shortName logo')
+      .populate('awayTeam', 'name shortName logo')
+      .populate('league', 'name');
     
-    // If match is created with ended status, update standings (only for regular matches)
-    if (populatedMatch.status === 'ended' && !populatedMatch.isStandalone) {
+    // If match is created with ended status, update standings
+    if (populatedMatch.status === 'ended') {
       try {
         // Import standings service
         const standingsService = require('../services/standingsService');
@@ -262,36 +249,25 @@ exports.createMatch = async (req, res) => {
 // Update match
 exports.updateMatch = async (req, res) => {
   try {
+    // Check if home team and away team are the same
+    if (req.body.homeTeam && req.body.awayTeam && req.body.homeTeam === req.body.awayTeam) {
+      return res.status(400).json({ message: 'Home team and away team cannot be the same' });
+    }
+    
     // Get the current match to check previous status
     const match = await Match.findById(req.params.id);
     if (!match) {
       return res.status(404).json({ message: 'Match not found' });
     }
     
-    // Check validation based on match type
-    if (match.isStandalone) {
-      // For standalone matches, check team names
-      if (req.body.standaloneData) {
-        const { homeTeamName, awayTeamName } = req.body.standaloneData;
-        if (homeTeamName && awayTeamName && homeTeamName.trim() === awayTeamName.trim()) {
-          return res.status(400).json({ message: 'Home team and away team cannot be the same' });
-        }
-      }
-    } else {
-      // For regular matches, check team IDs
-      if (req.body.homeTeam && req.body.awayTeam && req.body.homeTeam === req.body.awayTeam) {
+    // If only one team is being updated, check against the existing other team
+    if (req.body.homeTeam && !req.body.awayTeam) {
+      if (req.body.homeTeam === match.awayTeam.toString()) {
         return res.status(400).json({ message: 'Home team and away team cannot be the same' });
       }
-      
-      // If only one team is being updated, check against the existing other team
-      if (req.body.homeTeam && !req.body.awayTeam) {
-        if (req.body.homeTeam === match.awayTeam?.toString()) {
-          return res.status(400).json({ message: 'Home team and away team cannot be the same' });
-        }
-      } else if (!req.body.homeTeam && req.body.awayTeam) {
-        if (req.body.awayTeam === match.homeTeam?.toString()) {
-          return res.status(400).json({ message: 'Home team and away team cannot be the same' });
-        }
+    } else if (!req.body.homeTeam && req.body.awayTeam) {
+      if (req.body.awayTeam === match.homeTeam.toString()) {
+        return res.status(400).json({ message: 'Home team and away team cannot be the same' });
       }
     }
     
@@ -299,26 +275,19 @@ exports.updateMatch = async (req, res) => {
       req.params.id,
       req.body,
       { new: true, runValidators: true }
-    );
+    )
+      .populate('homeTeam', 'name shortName logo')
+      .populate('awayTeam', 'name shortName logo')
+      .populate('league', 'name');
     
-    let populatedMatch;
-    if (updatedMatch.isStandalone) {
-      populatedMatch = updatedMatch;
-    } else {
-      populatedMatch = await Match.findById(updatedMatch._id)
-        .populate('homeTeam', 'name shortName logo')
-        .populate('awayTeam', 'name shortName logo')
-        .populate('league', 'name');
-    }
-    
-    // If match is now ended but wasn't before, finalize live standings (only for regular matches)
-    if (populatedMatch.status === 'ended' && match.status !== 'ended' && !populatedMatch.isStandalone) {
+    // If match is now ended but wasn't before, finalize live standings
+    if (updatedMatch.status === 'ended' && match.status !== 'ended') {
       try {
         // Import live standings service to finalize
         const liveStandingsService = require('../services/liveStandingsService');
         
         // Finalize the live standings
-        const standingsResult = await liveStandingsService.finalizeMatchStandings(populatedMatch._id);
+        const standingsResult = await liveStandingsService.finalizeMatchStandings(updatedMatch._id);
         
         console.log('Live standings finalized for updated match:', standingsResult.success ? 'Success' : 'Failed');
       } catch (standingsError) {
@@ -326,7 +295,7 @@ exports.updateMatch = async (req, res) => {
       }
     }
     
-    res.status(200).json(populatedMatch);
+    res.status(200).json(updatedMatch);
   } catch (error) {
     console.error('Error updating match:', error);
     res.status(400).json({ message: error.message });
@@ -342,11 +311,7 @@ exports.addMatchEvent = async (req, res) => {
       return res.status(404).json({ message: 'Match not found' });
     }
     
-    // Skip event processing for standalone matches
-    if (match.isStandalone) {
-      return res.status(400).json({ message: 'Events not supported for standalone matches' });
-    }
-    
+
     // Add the new event
     match.events.push(req.body);
     

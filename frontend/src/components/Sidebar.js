@@ -158,18 +158,6 @@ const Sidebar = ({ isOpen, onClose }) => {
                   ) : (
                     <li className="text-sm text-gray-500 p-2">No competitions available</li>
                   )}
-                  <li>
-                    <Link 
-                      to="/standalone-matches"
-                      className="flex items-center hover:bg-dark-300 p-2 rounded-md text-purple-400"
-                      onClick={onClose}
-                    >
-                      <div className="w-6 h-6 bg-purple-900 bg-opacity-30 rounded-full mr-2 flex items-center justify-center">
-                        <span className="text-xs">SM</span>
-                      </div>
-                      <span className="text-sm">Standalone Matches</span>
-                    </Link>
-                  </li>
                 </ul>
               )}
             </div>

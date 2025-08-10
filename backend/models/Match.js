@@ -29,15 +29,14 @@ const matchSchema = new mongoose.Schema(
     homeTeam: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Team',
-      required: function() { return !this.isStandalone; }
+      required: true
     },
     awayTeam: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Team',
-      required: function() { return !this.isStandalone; },
+      required: true,
       validate: {
         validator: function(awayTeamId) {
-          if (this.isStandalone) return true;
           return !awayTeamId.equals(this.homeTeam);
         },
         message: 'Home team and away team cannot be the same'
@@ -46,7 +45,7 @@ const matchSchema = new mongoose.Schema(
     league: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'League',
-      required: function() { return !this.isStandalone; }
+      required: true
     },
     matchDate: {
       type: Date,
@@ -87,15 +86,7 @@ const matchSchema = new mongoose.Schema(
       type: String,
       required: true
     },
-    isStandalone: {
-      type: Boolean,
-      default: false
-    },
-    standaloneData: {
-      homeTeamName: String,
-      awayTeamName: String,
-      leagueName: String
-    }
+
   },
   { timestamps: true }
 );

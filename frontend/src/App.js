@@ -17,7 +17,6 @@ const CalendarPage = lazy(() => import('./pages/CalendarPage'));
 const CompetitionsPage = lazy(() => import('./pages/CompetitionsPage'));
 const TeamsPage = lazy(() => import('./pages/TeamsPage'));
 const MatchesPage = lazy(() => import('./pages/MatchesPage'));
-const StandaloneMatchesPage = lazy(() => import('./pages/StandaloneMatchesPage'));
 const LoginPage = lazy(() => import('./pages/LoginPage'));
 
 // Admin components
@@ -31,7 +30,6 @@ const AdminLeagueStandings = lazy(() => import('./pages/admin/AdminLeagueStandin
 const MatchEventsPage = lazy(() => import('./pages/admin/MatchEventsPage'));
 const EventsListPage = lazy(() => import('./pages/admin/EventsListPage'));
 const AdminNews = lazy(() => import('./pages/admin/AdminNews'));
-const AdminStandaloneMatches = lazy(() => import('./pages/admin/AdminStandaloneMatches'));
 
 function App() {
   const { loading } = useAuth();
@@ -90,11 +88,6 @@ function App() {
           <Route path="matches" element={
             <Suspense fallback={<LoadingSpinner />}>
               <MatchesPage />
-            </Suspense>
-          } />
-          <Route path="standalone-matches" element={
-            <Suspense fallback={<LoadingSpinner />}>
-              <StandaloneMatchesPage />
             </Suspense>
           } />
           <Route path="league/:leagueId" element={
@@ -175,11 +168,6 @@ function App() {
           <Route path="news" element={
             <Suspense fallback={<LoadingSpinner />}>
               <AdminNews />
-            </Suspense>
-          } />
-          <Route path="standalone-matches" element={
-            <Suspense fallback={<LoadingSpinner />}>
-              <AdminStandaloneMatches />
             </Suspense>
           } />
         </Route>
