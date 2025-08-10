@@ -137,16 +137,16 @@ const AdminDashboard = () => {
                       {new Date(match.matchDate).toLocaleDateString()}
                     </td>
                     <td className="py-3 text-sm">
-                      {match.league.name}
+                      {match.isStandalone ? match.standaloneData?.leagueName || 'Standalone' : match.league?.name || 'N/A'}
                     </td>
                     <td className="py-3">
-                      {match.homeTeam.name}
+                      {match.isStandalone ? match.standaloneData?.homeTeamName || 'N/A' : match.homeTeam?.name || 'N/A'}
                     </td>
                     <td className="py-3 font-medium">
                       {match.status !== 'not_started' ? `${match.homeScore} - ${match.awayScore}` : '-'}
                     </td>
                     <td className="py-3">
-                      {match.awayTeam.name}
+                      {match.isStandalone ? match.standaloneData?.awayTeamName || 'N/A' : match.awayTeam?.name || 'N/A'}
                     </td>
                     <td className="py-3">
                       {match.status === 'live' && <span className="live-badge">LIVE</span>}
